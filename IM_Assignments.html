@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IM Backup Matrix - Red & Blue View</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #fff;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            flex-grow: 1;
+            align-content: start;
+        }
+        .card {
+            border: 1px solid #000;
+            background: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 4px;
+            font-size: 12px;
+            text-align: left;
+            word-wrap: break-word;
+        }
+        th {
+            background-color: #eee;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+        /* Primary IM Column - Red Text */
+        .name-col { 
+            width: 70px; 
+            font-weight: 900; 
+            vertical-align: top; 
+            color: #ef4444; /* Red */
+        }
+        /* Backup IM Column - Blue Text */
+        .backup-col { 
+            width: 85px; 
+            font-weight: 900; 
+            color: #2563eb; /* Blue */
+        }
+        
+        .footer-note {
+            text-align: center;
+            border: 2px solid #000;
+            margin-top: 10px;
+            padding: 6px;
+            font-weight: bold;
+            font-size: 13px;
+            background: #fdfdfd;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <table>
+                <thead><tr><th class="name-col">Name</th><th>Category</th><th class="backup-col">BACKUP IM</th></tr></thead>
+                <tbody>
+                    <tr><td rowspan="4" class="name-col">Andrea</td><td>A1OM</td><td rowspan="4" class="backup-col">JEMMEL / JACK</td></tr>
+                    <tr><td>B1OM</td></tr>
+                    <tr><td>COM2</td></tr>
+                    <tr><td>B1MS</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead><tr><th class="name-col">Name</th><th>Category</th><th class="backup-col">BACKUP IM</th></tr></thead>
+                <tbody>
+                    <tr><td rowspan="6" class="name-col">William</td><td>A1MS</td><td rowspan="6" class="backup-col">JACK</td></tr>
+                    <tr><td>C1MS</td></tr>
+                    <tr><td>BMSP</td></tr>
+                    <tr><td>AINT</td></tr>
+                    <tr><td>BINT</td></tr>
+                    <tr><td>CINT</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead><tr><th class="name-col">Name</th><th>Category</th><th class="backup-col">BACKUP IM</th></tr></thead>
+                <tbody>
+                    <tr><td rowspan="5" class="name-col">Michael</td><td>SPS-INSTR</td><td rowspan="5" class="backup-col">RASSI</td></tr>
+                    <tr><td>DENTAL INST</td></tr>
+                    <tr><td>INTUITIVE</td></tr>
+                    <tr><td>AMMO</td></tr>
+                    <tr><td>CONTINGENCY</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead><tr><th class="name-col">Name</th><th>Category</th><th class="backup-col">BACKUP IM</th></tr></thead>
+                <tbody>
+                    <tr><td rowspan="3" class="name-col">Rassi</td><td>AOM</td><td rowspan="3" class="backup-col">WILLIAM</td></tr>
+                    <tr><td>BOM</td></tr>
+                    <tr><td>AMSP</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead><tr><th class="name-col">Name</th><th>Category</th><th class="backup-col">BACKUP IM</th></tr></thead>
+                <tbody>
+                    <tr><td rowspan="3" class="name-col">Maricruz</td><td>MJL (Office)</td><td rowspan="3" class="backup-col">MICHAEL</td></tr>
+                    <tr><td>RECALLS</td></tr>
+                    <tr><td>LEAF REQ</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead><tr><th class="name-col">Name</th><th>Category</th><th class="backup-col">BACKUP IM</th></tr></thead>
+                <tbody>
+                    <tr><td rowspan="2" class="name-col">Misty</td><td>CMSP</td><td rowspan="2" class="backup-col">TY / JACK</td></tr>
+                    <tr><td>EMS</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead><tr><th class="name-col">Name</th><th>Category</th><th class="backup-col">BACKUP IM</th></tr></thead>
+                <tbody>
+                    <tr><td rowspan="2" class="name-col">Jack</td><td>C1OM</td><td rowspan="2" class="backup-col">OR TEAM</td></tr>
+                    <tr><td>IMPLANTS</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead><tr><th class="name-col">Name</th><th>Category</th><th class="backup-col">BACKUP IM</th></tr></thead>
+                <tbody>
+                    <tr><td rowspan="2" class="name-col">Tyrone</td><td>DENTAL</td><td rowspan="2" class="backup-col">PENNY</td></tr>
+                    <tr><td>ENG (MAYBE)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <table>
+                <thead><tr><th class="name-col">Name</th><th>Category</th><th class="backup-col">BACKUP IM</th></tr></thead>
+                <tbody>
+                    <tr><td class="name-col">Penny</td><td>COM1</td><td class="backup-col">ANDREA</td></tr>
+                    <tr><td class="name-col">Jemmel</td><td>IMG</td><td class="backup-col">ANDREA</td></tr>
+                    <tr><td class="name-col">Brian</td><td>Prosthetics</td><td class="backup-col">N/A</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        BACKUP IM AVAILABLE WHEN PRIMARY IM IS ON LEAVE
+    </div>
+
+</body>
+</html>
