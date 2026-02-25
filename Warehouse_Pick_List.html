@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warehouse Pick List Generator</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="SearchDATFile.js"></script>
     <style>
         body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 20px; background-color: #f0f4f8; color: #1a202c; }
         .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        h2 { color: #2d3748; border-left: 5px solid #38a169; padding-left: 15px; margin-bottom: 25px; }
+        h2 { color: #2d3748; border-left: 5px solid #38a169; padding-left: 15px; margin-bottom: 5px; }
         
         .setup-container { height: 110px; margin-bottom: 20px; }
         .setup-box { background: #edf2f7; border-radius: 8px; padding: 20px; }
+
+        .prefill-btn { background: #4a5568; color: white; padding: 8px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; display: block; }
 
         /* FIXED GRID: Column 1 is tighter, Column 2 fits the text perfectly */
         .entry-grid { 
@@ -24,8 +26,8 @@
 
         .header-grid { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #4a5568; }
         .col-item { text-align: left; }
-        .col-pkg  { text-align: center; }
-        .col-qty  { text-align: center; }
+        .col-pkg   { text-align: center; }
+        .col-qty   { text-align: center; }
 
         .item-input { width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
         .qty-input { width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 6px; font-size: 16px; text-align: center; box-sizing: border-box; }
@@ -39,8 +41,9 @@
         .process-btn { background: #38a169; color: white; width: 100%; padding: 18px; font-size: 18px; margin-top: 20px; }
         .save-btn { background: #805ad5; color: white; padding: 8px 15px; margin-top: 10px; font-size: 12px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background: #2d3748; color: white; padding: 12px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid black; }
+        th, td { border: 1px solid black; padding: 12px; text-align: left; }
+        th { background: #2d3748; color: white; }
         .loc-cell { font-family: monospace; font-weight: 800; color: #2f855a; background: #f0fff4; }
         .page-break { page-break-before: always; border-top: 2px dashed #cbd5e0; margin-top: 50px; padding-top: 20px; }
 
@@ -51,6 +54,7 @@
 
 <div class="container">
     <h2 class="no-print">Warehouse Pick List</h2>
+    <button class="prefill-btn no-print" onclick="preFillAll()">PRE-FILL ALL ITEMS</button>
     
     <div class="setup-container no-print">
         <div id="setup-area" class="setup-box">
@@ -69,12 +73,14 @@
             <div></div> 
         </div>
 
-        <div class="entry-grid">
-            <input type="text" class="item-input" maxlength="12" oninput="autoPopulate(this)" autofocus>
-            <span class="info-badge">Pkg: -- | Case: --</span>
-            <input type="text" class="qty-input" maxlength="3">
-            <button class="add-btn" onclick="addInput()">+</button>
-            <div></div>
+        <div id="main-entry-list">
+            <div class="entry-grid">
+                <input type="text" class="item-input" maxlength="12" oninput="autoPopulate(this)" autofocus>
+                <span class="info-badge">Pkg: -- | Case: --</span>
+                <input type="text" class="qty-input" maxlength="3">
+                <button class="add-btn" onclick="addInput()">+</button>
+                <div></div>
+            </div>
         </div>
     </div>
 
@@ -152,24 +158,48 @@
         link.click();
     }
 
-    function addInput() {
-        const container = document.getElementById('input-fields');
+    function addInput(itemVal = "", pkgHtml = "Pkg: -- | Case: --", bg = "#e2e8f0") {
+        const container = document.getElementById('main-entry-list');
         const div = document.createElement('div');
         div.className = 'entry-grid';
         div.innerHTML = `
-            <input type="text" class="item-input" maxlength="12" oninput="autoPopulate(this)">
-            <span class="info-badge">Pkg: -- | Case: --</span>
+            <input type="text" class="item-input" maxlength="12" oninput="autoPopulate(this)" value="${itemVal}">
+            <span class="info-badge" style="background:${bg}">${pkgHtml}</span>
             <input type="text" class="qty-input" maxlength="3">
             <button class="rem-btn" onclick="this.parentElement.remove()">×</button>
             <button class="add-btn" onclick="addInput()">+</button>
         `;
         container.appendChild(div);
-        div.querySelector('input').focus();
+        if(!itemVal) div.querySelector('input').focus();
+    }
+
+    function preFillAll() {
+        if (rawData.length === 0) return alert("Upload a file first.");
+        const container = document.getElementById('main-entry-list');
+        container.innerHTML = ""; // Clear existing rows
+
+        const firstRow = rawData[0];
+        const kItemNum = findHeader(firstRow, ['item_num', 'item #']);
+        const kWhse    = findHeader(firstRow, ['WHSE_LOC', 'WHSE_', 'WHSE']);
+        const kParLoc  = findHeader(firstRow, ['par_loc']);
+        const kEachPer = findHeader(firstRow, ['each_per_bx/pkg/sleeve', 'each per']);
+        const kBxCase  = findHeader(firstRow, ['bx/pkg/sleeve_per_case', 'bx/pkg']);
+
+        rawData.forEach(row => {
+            const item = String(row[kItemNum] || '').trim();
+            const loc = String(row[kWhse] || '').trim();
+            const par = String(row[kParLoc] || '').trim();
+
+            if (item && loc && loc !== "N/A" && par === "C-DIST") {
+                const pkgText = `Pkg: <b>${row[kEachPer] || '0'}</b> | Case: <b>${row[kBxCase] || '0'}</b>`;
+                addInput(item, pkgText, "#c6f6d5");
+            }
+        });
     }
 
     function processData() {
         if (rawData.length === 0) return alert("Upload a file first.");
-        const rows = Array.from(document.querySelectorAll('.entry-grid:not(.header-grid)'));
+        const rows = Array.from(document.querySelectorAll('#main-entry-list .entry-grid'));
         const requestMap = {};
         rows.forEach(row => {
             const item = row.querySelector('.item-input').value.trim();
@@ -182,11 +212,12 @@
         const keys = {
             itemNum:  findHeader(firstRow, ['item_num', 'item #']),
             itemDesc: findHeader(firstRow, ['item_desc', 'description']),
-            whse:     findHeader(firstRow, ['WHSE_LOC', 'WHSE_', 'WHSE']),
-            reqBin:   findHeader(firstRow, ['req_bin']),
+            whse:      findHeader(firstRow, ['WHSE_LOC', 'WHSE_', 'WHSE']),
+            reqBin:    findHeader(firstRow, ['req_bin']),
             eachPer:  findHeader(firstRow, ['each_per_bx/pkg/sleeve', 'each per']),
-            bxCase:   findHeader(firstRow, ['bx/pkg/sleeve_per_case', 'bx/pkg']),
-            parLoc:   findHeader(firstRow, ['par_loc'])
+            bxCase:    findHeader(firstRow, ['bx/pkg/sleeve_per_case', 'bx/pkg']),
+            parLoc:    findHeader(firstRow, ['par_loc']),
+            maxCases:  findHeader(firstRow, ['MAX per Shelf'])
         };
 
         const matches = rawData.filter(row => 
@@ -204,12 +235,12 @@
         let html = `<h3>${title} (${data.length} Items)</h3>
                     <table><thead><tr>
                         <th>WHSE Location</th><th>Item #</th><th>Description</th>
-                        <th>Pull Qty</th><th>Req Bin</th><th>Ea/Pkg</th><th>Pkg/Case</th>
+                        <th>Pull Qty</th><th>Req Bin</th><th>Ea/Pkg</th><th>Pkg/Case</th><th>Max Cases</th>
                     </tr></thead><tbody>`;
         data.forEach(row => {
             const itemKey = String(row[k.itemNum] || '').trim();
             let loc = String(row[k.whse] || 'N/A').replace(/WHSE-/gi, "");
-            html += `<tr><td class="loc-cell">${loc}</td><td><strong>${itemKey}</strong></td><td>${row[k.itemDesc] || ''}</td><td style="font-weight:bold; color:#d9534f; font-size:1.2em;">${requestMap[itemKey] || ''}</td><td>${row[k.reqBin] || ''}</td><td>${row[k.eachPer] || ''}</td><td>${row[k.bxCase] || ''}</td></tr>`;
+            html += `<tr><td class="loc-cell">${loc}</td><td><strong>${itemKey}</strong></td><td>${row[k.itemDesc] || ''}</td><td style="font-weight:bold; color:#d9534f; font-size:1.2em;">${requestMap[itemKey] || ''}</td><td>${row[k.reqBin] || ''}</td><td>${row[k.eachPer] || ''}</td><td>${row[k.bxCase] || ''}</td><td>${row[k.maxCases] || ''}</td></tr>`;
         });
         return html + "</tbody></table>";
     }
