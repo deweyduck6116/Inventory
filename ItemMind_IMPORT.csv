@@ -1,0 +1,6 @@
+externalId,name,quantity,category,roomId,boxId,barcode,notes,tags,currencyCode,purchasePrice,purchaseDate,warrantyExpiryDate,warrantyProvider,warrantyType,warrantyValue,warrantyRecurringInterval,createdAt,updatedAt
+38096,"Forceps, Occluding, Yellow Tube",1,Inventory,Hemo,P04R03B06,IE321 38096,"2nd room on right, code 7833",Alias1;Alias2,USD,00.00,,8/28/2026,,,,,1/1/2026,3/6/2026
+38101,"Glasses, safety, Plstc, Les,car,u",1,Inventory,4C,P06R06B03,IE211 38101,"Behind MSA desk, code 7833",Alias3;Alias4,USD,00.00,,8/9/2026,,,,,1/1/2026,3/6/2026
+41271,"Tubing,Oxygen connecting, L 7ft",1,Inventory,4C,P06R05B05,IE211 41271,"Behind MSA desk, code 7833",Alias5;Alias6,USD,00.00,,8/19/2026,,,,,1/1/2026,3/6/2026
+27274,Dressing,0,Inventory,C-DIST-B,P04R03B06,IE3 27274,Basement,Alias7,USD,00.00,,,,,,,1/1/2026,3/6/2026
+38031,Guidewire,0,Inventory,C-DIST-B,P04R03B06,IE3 38031,Basement,Alias8,USD,00.00,,,,,,,1/1/2026,3/6/2026
