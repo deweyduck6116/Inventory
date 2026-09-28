@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+        }
+        h1 {
+            color: #333;
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        p {
+            color: #666;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Redirecting...</h1>
+        <div class="spinner"></div>
+        <p id="status">Attempting to reach primary destination</p>
+        <div class="status" id="debug"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const PRIMARY_URL = 'https://htmlify.me/deweyduck6116/Inventory/PC%20Kiosk.html'; // Primary site
+        const BACKUP_URL = 'https://deweyduck6116.github.io/Inventory/PC_Kiosk_Loader.html'; // Backup site
+        const TIMEOUT = 3000; // 3 seconds timeout
+
+        const statusEl = document.getElementById('status');
+        const debugEl = document.getElementById('debug');
+
+        function attemptRedirect(url, isPrimary) {
+            const label = isPrimary ? 'primary' : 'backup';
+            console.log(`Attempting ${label} redirect to: ${url}`);
+            
+            return new Promise((resolve) => {
+                const timeout = setTimeout(() => {
+                    console.log(`${label} timeout after ${TIMEOUT}ms`);
+                    resolve(false);
+                }, TIMEOUT);
+
+                fetch(url, { method: 'GET', mode: 'cors' })
+                    .then(response => {
+                        clearTimeout(timeout);
+                        // Only consider 2xx status codes as success
+                        if (response.ok) {
+                            console.log(`${label} returned status ${response.status}`);
+                            resolve(true);
+                        } else {
+                            console.log(`${label} returned error status ${response.status}`);
+                            resolve(false);
+                        }
+                    })
+                    .catch(() => {
+                        clearTimeout(timeout);
+                        console.log(`${label} fetch failed`);
+                        resolve(false);
+                    });
+            });
+        }
+
+        async function redirect() {
+            // Try primary URL
+            statusEl.textContent = 'Checking primary destination...';
+            const primaryReachable = await attemptRedirect(PRIMARY_URL, true);
+
+            if (primaryReachable) {
+                statusEl.textContent = 'Redirecting to primary destination...';
+                debugEl.textContent = `✓ Successfully reached: ${PRIMARY_URL}`;
+                window.location.href = PRIMARY_URL;
+                return;
+            }
+
+            // Primary failed, try backup
+            statusEl.textContent = 'Primary unreachable, trying backup...';
+            const backupReachable = await attemptRedirect(BACKUP_URL, false);
+
+            if (backupReachable) {
+                statusEl.textContent = 'Redirecting to backup destination...';
+                debugEl.textContent = `✓ Redirecting to backup: ${BACKUP_URL}`;
+                window.location.href = BACKUP_URL;
+                return;
+            }
+
+            // Both failed
+            statusEl.textContent = 'Both destinations unavailable';
+            debugEl.textContent = `✗ Neither ${PRIMARY_URL} nor ${BACKUP_URL} could be reached`;
+        }
+
+        // Start redirect process
+        redirect();
+    </script>
+</body>
+</html>
