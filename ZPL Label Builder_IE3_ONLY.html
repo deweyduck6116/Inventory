@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZPL Labels from Book1-C-DIST.xlsx</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 0.5rem; color: #222; }
+    .card { border: 1px solid #ddd; border-radius: 6px; padding: 0.8rem; width: 100%; }
+    h1 { margin: 0 0 0.3rem 0; font-size: 1.3rem; }
+    .intro { font-size: 0.9rem; margin: 0.3rem 0; color: #555; }
+    .controls { display: flex; gap: 0.5rem; align-items: center; margin: 0.5rem 0; flex-wrap: wrap; font-size: 0.9rem; }
+    label { font-weight: 600; }
+    input[type="text"], input[type="file"] { padding: 0.3rem; font-size: 0.9rem; }
+    button { padding: 0.4rem 0.7rem; border-radius: 4px; border: 1px solid #333; background: #333; color: #fff; cursor: pointer; font-size: 0.85rem; }
+    button.secondary { background: #fff; color: #333; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    small { color: #666; font-size: 0.8rem; display: block; margin-top: 0.3rem; }
+    table { width: 100%; border-collapse: collapse; border: 1px solid #ccc; margin-top: 0.5rem; font-size: 0.8rem; }
+    th, td { border: 1px solid #e5e5e5; padding: 0.3rem; text-align: left; }
+    th { background: #f7f7f9; cursor: pointer; font-weight: 600; }
+    td { max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
+    .barcode-cell { max-width: 130px; overflow: visible; padding: 0.2rem; }
+    canvas { border: 1px solid #999; background: white; max-width: 100%; height: auto; }
+    .row-actions { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+    .row-actions button { padding: 0.2rem 0.4rem; font-size: 0.75rem; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal.active { display: flex; align-items: center; justify-content: center; }
+    .modal-content { background: white; border-radius: 8px; padding: 1.5rem; max-width: 500px; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .modal-header { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; }
+    .modal-close { float: right; font-size: 1.5rem; cursor: pointer; color: #666; }
+    .filter-tree { margin: 1rem 0; }
+    .filter-group { margin: 0.8rem 0; }
+    .filter-group label { display: block; margin: 0.4rem 0; }
+    .filter-group input[type="checkbox"] { margin-right: 0.3rem; }
+    .sub-filter { margin-left: 1.5rem; }
+    .section-header { cursor: pointer; user-select: none; font-weight: 600; padding: 0.3rem; margin: 0.5rem 0 0.3rem 0; }
+    .section-header:hover { background: #f0f0f0; border-radius: 4px; }
+    .section-header input[type="checkbox"] { margin-right: 0.3rem; }
+    .toggle-icon { display: inline-block; width: 20px; font-size: 0.9rem; }
+    .racks-container { margin-left: 1.5rem; }
+    .rack-item { margin: 0.4rem 0; }
+    .rack-item label { cursor: pointer; }
+    .shelves-container { margin-left: 1.5rem; }
+    .shelf-item { margin: 0.3rem 0; font-size: 0.9rem; }
+    .filter-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
+    .filter-actions button { padding: 0.5rem 1rem; }
+    .filter-info { font-size: 0.85rem; color: #666; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>ZPL Label Builder — External/Embedded</h1>
+    <p class="intro">
+      Please select <strong>Book1-C-DIST.xlsx</strong> using the file picker.
+      This builds one ZPL label per row.
+    </p>
+
+    <div class="controls">
+      <label for="ieNumber">IE Number:</label>
+      <input id="ieNumber" type="text" value="3" placeholder="1-4 digits" style="width: 60px;" />
+      <div style="margin-left: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <label for="printerIP">Printer IP Address:</label>
+          <input id="printerIP" type="text" value="10.148.103.100" placeholder="IP Address" style="width: 130px;" />
+        </div>
+        <small style="font-size: 0.65rem; margin-top: 0.15rem;">Printer names are not recognized by this program. An IP address is mandatory.</small>
+      </div>
+      <label for="doublePrintCheckbox" style="margin-left: 1rem;">
+        <input id="doublePrintCheckbox" type="checkbox" checked style="margin-right: 0.3rem;" />
+        Print All Labels 2x
+      </label>
+    </div>
+
+    <div class="controls">
+      <strong>REF:</strong>
+      <label style="font-weight: 400;"><input id="refOff" type="radio" name="refPrint" value="off" checked /> Do Not Include</label>
+      <label style="font-weight: 400;"><input id="refOn" type="radio" name="refPrint" value="on" /> Include</label>
+      <strong style="margin-left: 1rem;">Comment:</strong>
+      <label style="font-weight: 400;"><input id="commentOff" type="radio" name="commentPrint" value="off" checked /> Do Not Include</label>
+      <label style="font-weight: 400;"><input id="commentOn" type="radio" name="commentPrint" value="on" /> Include</label>
+    </div>
+
+    <div class="controls">
+      <strong>C-Dist Source:</strong>
+      <label style="font-weight: 400;">
+        <input id="sourceOnline" type="radio" name="cDistSource" value="online" checked />
+        Embedded
+      </label>
+      <label style="font-weight: 400;">
+        <input id="sourceLocal" type="radio" name="cDistSource" value="local" />
+        External
+      </label>
+      <strong style="margin-left: 1rem;">Comment Source:</strong>
+      <label style="font-weight: 400;">
+        <input id="commentSourceOnline" type="radio" name="commentSource" value="online" checked />
+        Embedded
+      </label>
+      <label style="font-weight: 400;">
+        <input id="commentSourceLocal" type="radio" name="commentSource" value="local" />
+        External
+      </label>
+      <small id="commentJsonStatus" style="display:inline; margin:0;">Embedded C-Dist_Comments.json: loading...</small>
+    </div>
+
+    <div id="onlineSourceControls" class="controls">
+      <label>Embedded File:</label>
+      <span>Book1-C-DIST.xlsx</span>
+      <small id="onlineCommitNotice" style="display:inline; margin:0;">Last commit: checking...</small>
+      <button id="reloadOnlineBtn" class="secondary">Reload Embedded</button>
+    </div>
+
+    <div id="localSourceControls" class="controls" style="display: none;">
+      <label for="fileInput">C-Dist File:</label>
+      <input id="fileInput" type="file" accept=".xlsx,.xlsb,.xlsm,.xls" />
+    </div>
+
+    <div id="localCommentControls" class="controls" style="display: none;">
+      <label for="commentJsonInput">Comment JSON:</label>
+      <input id="commentJsonInput" type="file" accept=".json" />
+    </div>
+
+    <div class="controls">
+      <label for="sheetName">Sheet:</label>
+      <input id="sheetName" type="text" placeholder="(leave blank)" style="width: 100px;" />
+      <button id="rebuildBtn" class="secondary">Rebuild</button>
+    </div>
+
+    <div class="controls">
+      <button id="filterBtn" class="secondary" disabled>Filter & Select</button>
+      <button id="downloadAllBtn" class="secondary" disabled>Download ALL (.zpl)</button>
+      <button id="copyPSBtn" class="secondary" disabled>Copy PowerShell Command</button>
+      <button id="exportCSVBtn" class="secondary" disabled>Export to CSV</button>
+      <small id="status"></small>
+    </div>
+
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th style="width: 50px;">Row</th>
+          <th style="width: 60px;">IMF</th>
+          <th style="width: 120px;">Description</th>
+          <th style="width: 60px;">UoI</th>
+          <th style="width: 50px;">L</th>
+          <th style="width: 50px;">R</th>
+          <th style="width: 80px;">OD:IE</th>
+          <th style="width: 130px;">Label Preview</th>
+          <th style="width: 120px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="filterModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="modal-close" onclick="document.getElementById('filterModal').classList.remove('active')">&times;</span>
+        Filter Labels by Location
+      </div>
+      <div id="filterTree" class="filter-tree"></div>
+      <div class="filter-info">
+        <strong id="selectedCount">0</strong> labels selected
+      </div>
+      <div class="filter-actions">
+        <button onclick="applyFilterSelection()">Apply Filter</button>
+        <button onclick="resetAllCheckboxes()" class="secondary">Reset All</button>
+        <button onclick="document.getElementById('filterModal').classList.remove('active')" class="secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const patterns=["BaBbBb","BbBaBb","BbBbBa","AbAbBc","AbAcBb","AcAbBb","AbBbAc","AbBcAb","AcBbAb","BbAbAc","BbAcAb","BcAbAb","AaBbCb","AbBaCb","AbBbCa","AaCbBb","AbCaBb","AbCbBa","BbCbAa","BbAaCb","BbAbCa","BaCbAb","BbCaAb","CaCaCa","CaAbBb","CbAaBb","CbAbBa","CaBbAb","CbBaAb","CbBbAa","BaBaBc","BaBcBa","BcBaBa","AaAcBc","AcAaBc","AcAcBa","AaBcAc","AcBaAc","AcBcAa","BaAcAc","BcAaAc","BcAcAa","AaBaCc","AaBcCa","AcBaCa","AaCaBc","AaCcBa","AcCaBa","CaCaBa","BaAcCa","BcAaCa","BaCaAc","BaCcAa","BaCaCa","CaAaBc","CaAcBa","CcAaBa","CaBaAc","CaBcAa","CcBaAa","CaDaAa","BbAdAa","DcAaAa","AaAbBd","AaAdBb","AbAaBd","AbAdBa","AdAaBb","AdAbBa","AaBbAd","AaBdAb","AbBaAd","AbBdAa","AdBaAb","AdBbAa","BdAbAa","BbAaAd","DaCaAa","BdAaAb","AcDaAa","AaAbDb","AbAaDb","AbAbDa","AaDbAb","AbDaAb","AbDbAa","DaAbAb","DbAaAb","DbAbAa","BaBaDa","BaDaBa","DaBaBa","AaAaDc","AaAcDa","AcAaDa","AaDaAc","AaDcAa","DaAaAc","DaAcAa","AaCaDa","AaDaCa","CaAaDa","DaAaCa","BaAdAb","BaAbAd","BaAbCb","BcCaAaB"];
+
+    const ieLookup = {'3': 'C-DIST', '211': '4C', '214': 'RESEARCH', '219': 'OUT-PT-LAB', '220': 'GLOBE', '221': 'SHOW-LOW', '286': 'PREP', '288': 'AUDIOLOGY', '289': 'SCI', '293': 'PCM2', '301': 'IN-PT-PHARM', '305': 'OUT-PT-PHARM', '309': '5CD', '315': 'IV-ROOM', '317': 'CRASH-CART', '318': 'ONCOLOGY', '320': 'REHAB', '321': 'HEMO', '322': 'LAB INPT', '325': 'BRONCH-LAB', '329': 'EYE', '331': 'SURGERY', '352': 'PCM3', '359': 'NEUROLOGY-EEG', '369': 'CASE-CART', '463': 'PROC CCLAB', '477': '4D', '480': 'ED2', '481': '2C', '484': 'PAIN MGMT', '498': 'ENDO', '506': 'ENT', '509': 'AMETHYST', '514': 'RAD', '515': 'TBIRD', '518': 'MRI', '525': 'NW', '529': 'MI-2', '530': 'SI-1', '535': 'RT', '541': 'RAD-RECVRY', '542': 'POD', '543': 'ACC SPEC', '549': 'NUCMD', '555': 'OR3', '556': 'OR2', '557': 'OR4', '558': 'OR5', '559': 'OR6', '560': 'OR7', '561': 'OR1', '606': 'SARRTP', '607': 'ENDO2', '617': 'REC-REHAB', '629': 'SAME DAY', '631': 'WOUND CARE', '632': 'SE LAB', '634': 'SE REHAB', '635': 'SE RAD', '638': 'SE AUDIO', '639': 'JUNIPER A1', '640': 'SANTAN B1', '641': 'MESQ A1', '642': 'SIERRA B1', '643': 'SE JUN A', '645': 'SE JUN C', '646': 'SE SAN A', '647': 'SE SAN B', '648': 'SE MESQ A', '649': 'SE MESQ B', '650': 'SE SIERRA', '651': 'SE SIERRB', '653': 'SE HBHC', '655': 'TURQUOIS', '659': 'ED3', '662': 'UROLOGY1', '664': 'NE1', '665': 'NE2', '666': 'CRRC', '676': 'ED1', '679': 'SW-ONE', '680': 'SW-TWO', '681': 'SW-THREE', '682': 'MT-ONE', '683': 'MT-TWO', '685': 'MT-FOUR', '688': 'CT1MSD', '691': 'CTMSD', '693': '4DFLUIDS', '698': '4CFLUIDS', '703': 'CORE-1', '704': 'ANES-1', '705': 'ANES-2', '706': 'ANES-3', '707': 'CORE-2', '708': 'CORE-3', '709': 'CORE-4', '711': 'CORE-6', '712': 'CORE-7', '713': 'CORE-8', '763': '4E', '770': '2A', '774': 'CLC', '775': 'GIANES', '778': 'CATHLAB2', '783': 'EMPLY', '784': 'VASCULAR', '789': '3B', '790': 'PROST MSD', '793': 'TBIRDLAB', '794': 'NWLAB', '795': 'SWLAB', '799': 'SHOWLOWLAB', '800': 'PAYSON LAB', '802': 'NWAUDIO', '805': 'OPC5A', '807': 'OPC5B', '808': 'OPC5C', '809': 'OPC5D', '810': 'OPC4A', '811': 'OPC4B', '812': 'OPC4C', '813': 'OPC4D', '814': 'OPC3A', '815': 'OPC3B', '816': 'OPC3C', '817': 'OPC3D', '819': 'OPCMRI', '820': 'OPCCT', '821': 'OPCLAB', '822': 'OPCMH', '823': 'OPCSPC', '824': 'OPCRAD', '829': 'BLGL', '830': 'IR REHAB', '855': 'OPCPOD', '856': 'MT DERMA', '861': 'SE JUN B', '862': 'SLEEPSTUDY', '863': 'NELAB', '865': 'MTLAB', '867': 'OPCSLP', '871': 'SEPOD', '879': 'SEDEND', '880': 'NWDEND', '881': 'PAR TEST', '882': 'DEN1D', '883': 'CLCDME', '886': 'ICURM', '887': 'AMBUL', '890': 'RAD209D', '891': 'RAD213D', '897': 'CLC1A', '898': 'CLC2'};
+
+    let allLabels = [];
+    let filteredLabels = [];
+    let locationFormat = null;
+    let cDistComments = {};
+
+    function normalizeCommentKey(value) { return (value ?? '').toString().trim(); }
+    function getJsonComment(imf) {
+      const key = normalizeCommentKey(imf);
+      const entry = cDistComments[key];
+      if (typeof entry === 'string') return entry.trim();
+      if (entry && typeof entry === 'object') return (entry.comment ?? '').toString().trim();
+      return '';
+    }
+    function parseCommentJsonText(text) {
+      const cleaned = (text ?? '').replace(/^\uFEFF/, '').trim();
+      if (!cleaned) throw new Error('The JSON file is empty.');
+      const parsed = JSON.parse(cleaned);
+      if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') throw new Error('JSON root must be an object keyed by IMF.');
+      const loaded = {};
+      for (const [rawKey, rawVal] of Object.entries(parsed)) {
+        const key = normalizeCommentKey(rawKey);
+        if (!key) continue;
+        let comment = '';
+        if (typeof rawVal === 'string') comment = rawVal.trim();
+        else if (rawVal && typeof rawVal === 'object') comment = (rawVal.comment ?? '').toString().trim();
+        if (comment) loaded[key] = { comment };
+      }
+      return loaded;
+    }
+    async function loadOnlineCommentJson() {
+      const status = document.getElementById('commentJsonStatus');
+      status.textContent = 'Embedded C-Dist_Comments.json: loading...';
+      try {
+        const response = await fetch(ONLINE_COMMENTS_URL, { cache: 'no-store' });
+        if (!response.ok) throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+        cDistComments = parseCommentJsonText(await response.text());
+        status.textContent = 'Embedded C-Dist_Comments.json loaded — ' + Object.keys(cDistComments).length + ' comment(s).';
+        rebuildCommentLabels();
+      } catch (err) {
+        cDistComments = {};
+        status.textContent = 'Embedded C-Dist_Comments.json load failed: ' + err.message;
+        rebuildCommentLabels();
+      }
+    }
+    async function loadCommentJson(file) {
+      const status = document.getElementById('commentJsonStatus');
+      if (!file) { cDistComments = {}; status.textContent = 'No C-Dist_Comments.json loaded.'; rebuildCommentLabels(); return; }
+      if (file.name !== 'C-Dist_Comments.json') {
+        cDistComments = {};
+        document.getElementById('commentJsonInput').value = '';
+        status.textContent = 'Rejected: filename must be C-Dist_Comments.json.';
+        alert('Please select the exact file: C-Dist_Comments.json');
+        rebuildCommentLabels();
+        return;
+      }
+      try {
+        cDistComments = parseCommentJsonText(await file.text());
+        status.textContent = 'Loaded C-Dist_Comments.json — ' + Object.keys(cDistComments).length + ' comment(s).';
+        rebuildCommentLabels();
+      } catch (err) {
+        cDistComments = {};
+        status.textContent = 'Comment JSON load failed: ' + err.message;
+        alert('Could not load C-Dist_Comments.json: ' + err.message);
+        rebuildCommentLabels();
+      }
+    }
+    function rebuildCommentLabels() {
+      if (allLabels.length === 0) return;
+      allLabels.forEach(label => { label.values.comment = getJsonComment(label.values.A); label.zpl = buildZPL(label.values); });
+      const toRender = filteredLabels.length > 0 ? filteredLabels : allLabels;
+      renderTable(toRender);
+    }
+
+    function tokens(s){let out=[],rx=/[\^~][A-Za-z0-9@\&]{1,2}/g,m,last=0;while((m=rx.exec(s))){if(m.index>last&&out.length)out[out.length-1].arg+=s.slice(last,m.index);out.push({cmd:m[0],arg:''});last=rx.lastIndex}if(last<s.length&&out.length)out[out.length-1].arg+=s.slice(last);return out}
+    function number(s,d){let n=Number(s);return s==null||s.trim()===''||!Number.isFinite(n)?d:n}
+    function parse(s){const t=tokens(s),warnings=[],labels=[],unsupported=new Set;let state=null,field=null;function fresh(){state={width:0,height:0,origin:[0,0],shift:0,font:{h:30,w:30,face:'0',rot:'N'},barcode:{w:2,ratio:3,h:100},reverse:false,items:[],ci:28};field=null}function commit(){if(!field)return;let raw=field.data||'';if(field.hex){raw=raw.replace(new RegExp(field.hex+'([0-9a-fA-F]{2})','g'),(_,hex)=>String.fromCharCode(parseInt(hex,16)))}state.items.push({...field,data:raw});field=null}for(const {cmd,arg} of t){if(cmd==='^XA'){if(state){commit();labels.push(state)}fresh();continue}if(!state)continue;let a=arg.split(',');switch(cmd){case '^XZ':commit();labels.push(state);state=null;break;case '^PW':state.width=number(arg,0);break;case '^LL':state.height=number(arg,0);break;case '^LH':state.origin=[number(a[0],0),number(a[1],0)];break;case '^LS':state.shift=number(arg,0);break;case '^CI':state.ci=number(arg,28);break;case '^FO':case '^FT':commit();field={x:number(a[0],0),y:number(a[1],0),baseline:cmd==='^FT',font:{...state.font},barcode:null,data:'',block:null,reverse:state.reverse,hex:null};break;case '^A0':case '^AN':case '^AA':case '^AB':case '^AC':case '^AD':case '^AE':case '^AF':case '^AG':case '^AH':case '^AI':case '^AJ':case '^AK':case '^AL':case '^AM':case '^AP':case '^AQ':case '^AR':case '^AS':case '^AT':case '^AU':case '^AV':case '^AW':case '^AX':case '^AY':case '^AZ':{let f={face:cmd.slice(2),rot:a[0]||'N',h:number(a[1],30),w:number(a[2],number(a[1],30))};if(field)field.font=f;else state.font=f;break}case '^CF':state.font={face:a[0]||'0',rot:'N',h:number(a[1],30),w:number(a[2],number(a[1],30))};break;case '^BY':state.barcode={w:number(a[0],2),ratio:number(a[1],3),h:number(a[2],100)};break;case '^BC':if(!field)field={x:0,y:0,baseline:false,font:{...state.font},data:'',block:null,reverse:state.reverse,hex:null};field.barcode={...state.barcode,rot:a[0]||'N',h:number(a[1],state.barcode.h),read:(a[2]||'Y')!=='N',above:(a[3]||'N')==='Y',check:(a[4]||'N')==='Y',mode:a[5]||'N'};break;case '^FB':if(field)field.block={width:number(a[0],0),lines:number(a[1],1),gap:number(a[2],0),align:a[3]||'L',indent:number(a[4],0)};break;case '^FH':if(field)field.hex=(arg.trim()||'_')[0];break;case '^FD':if(!field)field={x:0,y:0,baseline:false,font:{...state.font},data:'',block:null,reverse:state.reverse,hex:null};field.data+=arg;break;case '^FS':commit();break;case '^FR':if(field)field.reverse=true;else state.reverse=true;break;default:break}}if(state){commit();labels.push(state)}return {label:labels[0],warnings}}
+    function encode128(raw){let codes=[],subset='B',i=0;function switchTo(s){if(!codes.length)codes.push(s==='C'?105:104);else if(subset!==s)codes.push(s==='C'?99:100);subset=s}switchTo('B');while(i<raw.length){let run=(raw.slice(i).match(/^\d+/)||[''])[0].length;if(subset==='B'&&run>=4){let len=run-(run%2);if(len>=4){switchTo('C');continue}}if(subset==='C'){if(run>=2){codes.push(Number(raw.slice(i,i+2)));i+=2;continue}switchTo('B');continue}let n=raw.charCodeAt(i);if(n>=32&&n<=126)codes.push(n-32);else codes.push(0);i++}if(codes.length===1)throw Error('No barcode data');let checksum=codes[0];for(let j=1;j<codes.length;j++)checksum+=codes[j]*j;codes.push(checksum%103,106);return codes}
+    function barcode(ctx,item,x,y){let b=item.barcode;let codes=encode128(item.data),modules=[];for(let code of codes)for(let char of patterns[code])modules.push({bar:char>='A'&&char<='D',width:char.toLowerCase().charCodeAt(0)-96});let bw=Math.max(.5,b.w),height=Math.max(1,b.h),bars=modules.reduce((a,m)=>a+m.width,0)*bw;ctx.save();ctx.translate(x,y);let rot={N:0,R:Math.PI/2,I:Math.PI,B:-Math.PI/2}[b.rot]||0;ctx.rotate(rot);let top=b.read&&b.above?Math.max(18,bw*9):0;ctx.fillStyle='#000';let cursor=0;for(let m of modules){if(m.bar)ctx.fillRect(cursor,top,m.width*bw,height);cursor+=m.width*bw}if(b.read){ctx.font=`${Math.max(14,Math.min(28,bw*9))}px Arial`;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(item.data.replace(/>;|>:|>9/g,''),bars/2,b.above?0:top+height+5,bars)}ctx.restore();return {width:bars,height:top+height+(b.read&&!b.above?Math.max(25,bw*12):0)}}
+    function drawText(ctx,item,x,y){let f=item.font,h=Math.max(1,f.h),w=Math.max(1,f.w),lines=item.data.replace(/\&/g,'\n').split('\n');ctx.save();ctx.translate(x,y);ctx.rotate(({N:0,R:Math.PI/2,I:Math.PI,B:-Math.PI/2})[f.rot]||0);let scale=w/h;ctx.scale(scale,1);ctx.font=`${h}px Arial`;ctx.textBaseline=item.baseline?'alphabetic':'top';ctx.fillStyle='#000';let step=h+(item.block?.gap||0);if(item.block){let max=item.block.lines||lines.length;lines=lines.slice(0,max)}for(let i=0;i<lines.length;i++){let line=lines[i],offset=i===0?(item.block?.indent||0):0;if(item.block?.width){let bound=item.block.width/scale;ctx.textAlign=item.block.align==='C'?'center':item.block.align==='R'?'right':'left';let ax=item.block.align==='C'?bound/2:item.block.align==='R'?bound:offset;ctx.fillText(line,ax,i*step,bound)}else{ctx.textAlign='left';ctx.fillText(line,0,i*step)}}ctx.restore()}
+    function renderLabel(canvas, zpl) {try {let {label}=parse(zpl);if(!label)throw Error('No label found');if(!label.items.length)throw Error('No fields found');let maxX=0,maxY=0;for(let it of label.items){maxX=Math.max(maxX,it.x+(it.barcode?400:Math.max(80,it.data.length*it.font.w*.7)));maxY=Math.max(maxY,it.y+(it.barcode?it.barcode.h+45:it.font.h*2))}let W=Math.round(label.width||Math.max(400,maxX+20)),H=Math.round(label.height||Math.max(200,maxY+20));canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);for(let item of label.items){let x=item.x+label.origin[0]+label.shift,y=item.y+label.origin[1];if(item.barcode)barcode(ctx,item,x,y);else drawText(ctx,item,x,y)}} catch(e) {const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#f00';ctx.font='12px Arial';ctx.fillText('Render error',5,15);}}
+
+    function getIEName(ieNum) { return ieLookup[ieNum] || 'UNKNOWN'; }
+    function downloadText(filename, text) { const blob = new Blob([text], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+    function parseWorkbook(source) {
+      if (source instanceof ArrayBuffer) {
+        return Promise.resolve(XLSX.read(source, { type: 'array' }));
+      }
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try { resolve(XLSX.read(e.target.result, { type: 'array' })); }
+          catch (err) { reject(err); }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(source);
+      });
+    }
+    function getCellValue(sheet, addr) { const cell = sheet[addr]; if (!cell) return ''; return (typeof cell.w === 'string' ? cell.w : cell.v ?? '').toString(); }
+    function buildZPL(values) { const ieNum = (document.getElementById('ieNumber').value || '3').trim(); const ieName = getIEName(ieNum); const combined = 'IE' + ieNum + ' ' + values.A; const includeRef = document.getElementById('refOn').checked; const includeComment = document.getElementById('commentOn').checked; let humanText = combined; if (includeRef && values.R) humanText += ' REF:' + values.R; if (includeComment && values.comment) humanText += ' (' + values.comment + ')'; return '^XA^LH10,40^PON^FO0,0^AR^FD' + values.B + '^FS^FO0,40^AR^FDL:' + values.J + ' R:' + values.M + ' UoI:' + values.F + ' OD:' + ieName + ' ' + values.O + '^FS^FO0,80^AS^BCN,45,N,N,N^FD' + combined + '^FS^FO0,130^AS^FD' + humanText + '^FS^XZ'; }
+    function insertRow(data) { const tr = document.createElement('tr'); const mk = (text) => { const td = document.createElement('td'); td.textContent = text; return td; }; tr.appendChild(mk(data.rowNum)); tr.appendChild(mk(data.values.A)); tr.appendChild(mk(data.values.B)); tr.appendChild(mk(data.values.F)); tr.appendChild(mk(data.values.J)); tr.appendChild(mk(data.values.M)); tr.appendChild(mk(getIEName((document.getElementById('ieNumber').value || '3').trim()))); const tdPreview = document.createElement('td'); tdPreview.className = 'barcode-cell'; const canvas = document.createElement('canvas'); canvas.width = 400; canvas.height = 250; renderLabel(canvas, data.zpl); tdPreview.appendChild(canvas); tr.appendChild(tdPreview); const tdActions = document.createElement('td'); const actions = document.createElement('div'); actions.className = 'row-actions'; const btnCopyPS = document.createElement('button'); btnCopyPS.textContent = 'Copy PowerShell Command'; btnCopyPS.className = 'secondary'; btnCopyPS.onclick = async () => { const doublePrint = document.getElementById('doublePrintCheckbox').checked; let zplContent = data.zpl; if (doublePrint) { zplContent += data.zpl; } const printerIP = (document.getElementById('printerIP').value || '10.148.103.100').trim(); const port = 9100; const escapedZpl = zplContent.replace(/"/g, '\\"'); const psCmd = '$printerIP = "' + printerIP + '"; $port = ' + port + '; $zpl = "' + escapedZpl + '"; $client = New-Object System.Net.Sockets.TcpClient($printerIP, $port); $stream = $client.GetStream(); $bytes = [System.Text.Encoding]::ASCII.GetBytes($zpl); $stream.Write($bytes, 0, $bytes.Length); $stream.Flush(); $stream.Close(); $client.Close(); Write-Host "Sent to printer."'; await navigator.clipboard.writeText(psCmd); const originalText = btnCopyPS.textContent; btnCopyPS.textContent = 'Copied to clipboard!'; setTimeout(() => { btnCopyPS.textContent = originalText; }, 2000); alert('PowerShell command copied to clipboard!\n\nStep 1: Hit Win+X, I on the keyboard.\n\nWhen the black window appears...\nStep 2: Hit Ctrl+V on the keyboard, then hit Enter.\n\nStep 3: Type exit, and hit Enter or click the "X" in the upper right corner of the black screen window.'); }; actions.appendChild(btnCopyPS); tdActions.appendChild(actions); tr.appendChild(tdActions); document.querySelector('#dataTable tbody').appendChild(tr); }
+    function renderTable(labels) { const tbody = document.querySelector('#dataTable tbody'); tbody.innerHTML = ''; labels.forEach(label => insertRow(label)); }
+
+    function parseLocation(loc) { if (!loc) return null; const panelMatch = loc.match(/^P(\d+)R(\d+)B(\d+)$/i); if (panelMatch) { return { format: 'panel', panel: 'P' + panelMatch[1], row: 'R' + panelMatch[2], bin: 'B' + panelMatch[3] }; } const roomMatch = loc.match(/^([A-Z])(\d+)([A-Z])(\d+)$/); if (roomMatch) { return { format: 'room', room: roomMatch[1], rack: roomMatch[2], shelf: roomMatch[3], bin: roomMatch[4] }; } return null; }
+    function buildFilterTree() { const structure = {}; allLabels.forEach(label => { const parsed = parseLocation(label.values.O); if (!parsed) return; if (parsed.format === 'room') { if (!structure[parsed.room]) structure[parsed.room] = {}; if (!structure[parsed.room][parsed.rack]) structure[parsed.room][parsed.rack] = {}; if (!structure[parsed.room][parsed.rack][parsed.shelf]) structure[parsed.room][parsed.rack][parsed.shelf] = []; structure[parsed.room][parsed.rack][parsed.shelf].push(parsed.bin); } else { if (!structure[parsed.panel]) structure[parsed.panel] = {}; if (!structure[parsed.panel][parsed.row]) structure[parsed.panel][parsed.row] = {}; if (!structure[parsed.panel][parsed.row][parsed.bin]) structure[parsed.panel][parsed.row][parsed.bin] = []; structure[parsed.panel][parsed.row][parsed.bin].push(1); } }); return structure; }
+    function renderFilterUI() { const structure = buildFilterTree(); const tree = document.getElementById('filterTree'); tree.innerHTML = ''; if (allLabels.length === 0) return; const firstParsed = parseLocation(allLabels[0].values.O); locationFormat = firstParsed?.format || 'unknown'; if (locationFormat === 'room') { Object.keys(structure).sort().forEach(room => { const roomDiv = document.createElement('div'); roomDiv.className = 'filter-group'; const sectionHeader = document.createElement('div'); sectionHeader.className = 'section-header'; const toggleIcon = document.createElement('span'); toggleIcon.className = 'toggle-icon'; toggleIcon.textContent = '▼'; const sectionCheck = document.createElement('input'); sectionCheck.type = 'checkbox'; sectionCheck.dataset.section = room; sectionCheck.addEventListener('change', (e) => { const rackCheckboxes = roomDiv.querySelectorAll('.rack-item input[type="checkbox"]'); rackCheckboxes.forEach(cb => cb.checked = e.target.checked); updateSelectedCount(); }); const label = document.createElement('label'); label.style.display = 'inline'; label.style.marginLeft = '0.5rem'; label.appendChild(document.createTextNode(`Section ${room}`)); sectionHeader.appendChild(toggleIcon); sectionHeader.appendChild(sectionCheck); sectionHeader.appendChild(label); sectionHeader.addEventListener('click', (e) => { if (e.target !== sectionCheck) { const isVisible = racksContainer.style.display !== 'none'; racksContainer.style.display = isVisible ? 'none' : 'block'; toggleIcon.textContent = isVisible ? '▶' : '▼'; } }); const racksContainer = document.createElement('div');
+            racksContainer.style.display = 'none';
+            toggleIcon.textContent = '▶'; racksContainer.className = 'racks-container'; Object.keys(structure[room]).sort((a, b) => parseInt(a) - parseInt(b)).forEach(rack => { const rackDiv = document.createElement('div'); rackDiv.className = 'rack-item'; const rackCheck = document.createElement('input'); rackCheck.type = 'checkbox'; rackCheck.dataset.room = room; rackCheck.dataset.rack = rack; rackCheck.addEventListener('change', updateSelectedCount); const rackLabel = document.createElement('label'); rackLabel.appendChild(rackCheck); rackLabel.appendChild(document.createTextNode(`Rack ${rack}`)); const shelves = structure[room][rack]; const shelfDiv = document.createElement('div'); shelfDiv.className = 'shelves-container'; Object.keys(shelves).sort().forEach(shelf => { const shelfItem = document.createElement('div'); shelfItem.className = 'shelf-item'; const shelfCheck = document.createElement('input'); shelfCheck.type = 'checkbox'; shelfCheck.dataset.room = room; shelfCheck.dataset.rack = rack; shelfCheck.dataset.shelf = shelf; shelfCheck.addEventListener('change', updateSelectedCount); const shelfLabel = document.createElement('label'); shelfLabel.appendChild(shelfCheck); shelfLabel.appendChild(document.createTextNode(`Shelf ${shelf}`)); shelfItem.appendChild(shelfLabel); shelfDiv.appendChild(shelfItem); }); rackDiv.appendChild(rackLabel); rackDiv.appendChild(shelfDiv); racksContainer.appendChild(rackDiv); }); roomDiv.appendChild(sectionHeader); roomDiv.appendChild(racksContainer); tree.appendChild(roomDiv); }); } else { Object.keys(structure).sort().forEach(panel => { const panelDiv = document.createElement('div'); panelDiv.className = 'filter-group'; panelDiv.innerHTML = `<strong>${panel}</strong>`; Object.keys(structure[panel]).sort().forEach(row => { const rowLabel = document.createElement('label'); rowLabel.className = 'sub-filter'; const rowCheck = document.createElement('input'); rowCheck.type = 'checkbox'; rowCheck.dataset.panel = panel; rowCheck.dataset.row = row; rowCheck.addEventListener('change', updateSelectedCount); rowLabel.appendChild(rowCheck); rowLabel.appendChild(document.createTextNode(`Row ${row}`)); panelDiv.appendChild(rowLabel); }); tree.appendChild(panelDiv); }); } }
+    function updateSelectedCount() { const checked = document.querySelectorAll('#filterTree input[type="checkbox"]:checked').length; document.getElementById('selectedCount').textContent = checked; }
+    function resetAllCheckboxes() { document.querySelectorAll('#filterTree input[type="checkbox"]').forEach(cb => cb.checked = false); updateSelectedCount(); }
+    function applyFilterSelection() { const checkedBoxes = document.querySelectorAll('#filterTree input[type="checkbox"]:checked'); if (checkedBoxes.length === 0) { filteredLabels = []; document.getElementById('filterModal').classList.remove('active'); renderTable(allLabels); document.getElementById('status').textContent = 'Filter reset. Showing all ' + allLabels.length + ' labels.'; return; } const selected = new Set(); checkedBoxes.forEach(box => { if (locationFormat === 'room') { const room = box.dataset.room; const rack = box.dataset.rack; const shelf = box.dataset.shelf; allLabels.forEach((label, idx) => { const parsed = parseLocation(label.values.O); if (parsed && parsed.format === 'room' && parsed.room === room && parsed.rack === rack && (!shelf || parsed.shelf === shelf)) { selected.add(idx); } }); } else if (locationFormat === 'panel') { const panel = box.dataset.panel; const row = box.dataset.row; allLabels.forEach((label, idx) => { const parsed = parseLocation(label.values.O); if (parsed && parsed.format === 'panel' && parsed.panel === panel && (!row || parsed.row === row)) { selected.add(idx); } }); } }); filteredLabels = Array.from(selected).map(idx => allLabels[idx]); document.getElementById('filterModal').classList.remove('active'); renderTable(filteredLabels); document.getElementById('status').textContent = `Filtered to ${filteredLabels.length} labels. (Click "Filter & Select" to change)`; }
+    function exportLabelsToCSV(labels) { const csvRows = []; const headers = ['Row', 'IMF', 'Description', 'UoI', 'L', 'R', 'IE_Name', 'ZPL_Command']; csvRows.push(headers.map(h => '"' + h + '"').join(',')); labels.forEach(label => { const row = [label.rowNum, label.values.A, label.values.B, label.values.F, label.values.J, label.values.M, getIEName((document.getElementById('ieNumber').value || '3').trim()), label.zpl]; const csvRow = row.map(cell => '"' + (cell || '').toString().replace(/"/g, '""') + '"').join(','); csvRows.push(csvRow); }); const csvContent = csvRows.join('\n'); downloadText('labels_export.csv', csvContent); }
+
+    const ONLINE_CDIST_URL = 'https://deweyduck6116.github.io/Inventory/Book1-C-DIST.xlsx';
+    const ONLINE_CDIST_COMMITS_API = 'https://api.github.com/repos/deweyduck6116/Inventory/commits?path=Book1-C-DIST.xlsx&per_page=1';
+    const ONLINE_COMMENTS_URL = 'https://deweyduck6116.github.io/Inventory/C-Dist_Comments.json';
+
+    async function updateOnlineCommitNotice() {
+      const notice = document.getElementById('onlineCommitNotice');
+      try {
+        const response = await fetch(ONLINE_CDIST_COMMITS_API, { cache: 'no-store' });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const commits = await response.json();
+        const dateText = commits?.[0]?.commit?.committer?.date || commits?.[0]?.commit?.author?.date;
+        if (!dateText) throw new Error('No commit date');
+        const commitDate = new Date(dateText);
+        const ageMs = Math.max(0, Date.now() - commitDate.getTime());
+        const days = Math.floor(ageMs / 86400000);
+        const hours = Math.floor((ageMs % 86400000) / 3600000);
+        const minutes = Math.floor((ageMs % 3600000) / 60000);
+        const age = days > 0 ? days + 'd ' + hours + 'h old' : hours > 0 ? hours + 'h ' + minutes + 'm old' : minutes + 'm old';
+        notice.textContent = 'Last commit: ' + commitDate.toLocaleString() + ' (' + age + ')';
+      } catch (err) {
+        notice.textContent = 'Last commit: unavailable';
+      }
+    }
+
+    function resetLoadedLabels() {
+      document.querySelector('#dataTable tbody').innerHTML = '';
+      document.getElementById('downloadAllBtn').disabled = true;
+      document.getElementById('exportCSVBtn').disabled = true;
+      document.getElementById('filterBtn').disabled = true;
+      document.getElementById('copyPSBtn').disabled = true;
+      allLabels = [];
+      filteredLabels = [];
+    }
+
+    async function buildLabelsFromWorkbook(wb, sourceDescription) {
+      resetLoadedLabels();
+      const requestedName = (document.getElementById('sheetName').value || '').trim();
+      let sheet = requestedName && wb.SheetNames.includes(requestedName)
+        ? wb.Sheets[requestedName]
+        : wb.Sheets[wb.SheetNames[0]];
+      const ref = sheet['!ref'] || 'A1:Z9999';
+      const range = XLSX.utils.decode_range(ref);
+
+      for (let r = range.s.r + 1; r <= range.e.r; r++) {
+        const rowNum = r + 1;
+        const A = getCellValue(sheet, XLSX.utils.encode_cell({ r, c: 0 }));
+        const B = getCellValue(sheet, XLSX.utils.encode_cell({ r, c: 1 }));
+        const F = getCellValue(sheet, XLSX.utils.encode_cell({ r, c: 5 }));
+        const J = getCellValue(sheet, XLSX.utils.encode_cell({ r, c: 9 }));
+        const M = getCellValue(sheet, XLSX.utils.encode_cell({ r, c: 12 }));
+        const O = getCellValue(sheet, XLSX.utils.encode_cell({ r, c: 14 }));
+        const R = getCellValue(sheet, XLSX.utils.encode_cell({ r, c: 17 }));
+        // IMPORTANT: Book1-C-DIST.xlsx is a read-only source. Comments MUST NOT be read from Column V.
+        // C-Dist_Comments.json, keyed by IMF (Column A), is the sole Comment source.
+        const comment = getJsonComment(A);
+        const corePresent = [B].some(v => (v ?? '').toString().trim() !== '');
+        if (!corePresent) continue;
+        const values = { A, B, F, J, M, O, R, comment };
+        const zpl = buildZPL(values);
+        insertRow({ rowNum, values, zpl });
+        allLabels.push({ rowNum, values, zpl });
+      }
+
+      if (allLabels.length === 0) {
+        document.getElementById('status').textContent = 'No valid data rows found.';
+        return;
+      }
+
+      document.getElementById('downloadAllBtn').disabled = false;
+      document.getElementById('exportCSVBtn').disabled = false;
+      document.getElementById('filterBtn').disabled = false;
+      document.getElementById('copyPSBtn').disabled = false;
+      document.getElementById('status').textContent =
+        'Loaded ' + sourceDescription + '. Built ' + allLabels.length + ' labels.';
+    }
+
+    async function loadOnlineWorkbook() {
+      resetLoadedLabels();
+      document.getElementById('status').textContent = 'Loading embedded C-Dist file...';
+      try {
+        const response = await fetch(ONLINE_CDIST_URL, { cache: 'no-store' });
+        if (!response.ok) throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+        const buffer = await response.arrayBuffer();
+        const wb = await parseWorkbook(buffer);
+        await buildLabelsFromWorkbook(wb, 'embedded Book1-C-DIST.xlsx');
+      } catch (err) {
+        resetLoadedLabels();
+        document.getElementById('status').textContent =
+          'Embedded C-Dist load failed: ' + err.message + '. Switch to External to select a file.';
+      }
+    }
+
+    async function loadLocalWorkbook() {
+      const file = document.getElementById('fileInput').files?.[0];
+      if (!file) {
+        resetLoadedLabels();
+        document.getElementById('status').textContent = 'External source selected. Please select Book1-C-DIST.xlsx.';
+        return;
+      }
+      document.getElementById('status').textContent = 'Loading external file: ' + file.name;
+      try {
+        const wb = await parseWorkbook(file);
+        await buildLabelsFromWorkbook(wb, 'external ' + file.name);
+      } catch (err) {
+        resetLoadedLabels();
+        document.getElementById('status').textContent = 'External C-Dist load failed: ' + err.message;
+      }
+    }
+
+    function updateCommentSourceControls() {
+      const online = document.getElementById('commentSourceOnline').checked;
+      document.getElementById('localCommentControls').style.display = online ? 'none' : 'inline-flex';
+      if (online) {
+        loadOnlineCommentJson();
+      } else {
+        const file = document.getElementById('commentJsonInput').files?.[0];
+        if (file) loadCommentJson(file);
+        else {
+          cDistComments = {};
+          document.getElementById('commentJsonStatus').textContent = '';
+          rebuildCommentLabels();
+        }
+      }
+    }
+
+    function updateSourceControls() {
+      const online = document.getElementById('sourceOnline').checked;
+      document.getElementById('onlineSourceControls').style.display = online ? 'flex' : 'none';
+      document.getElementById('localSourceControls').style.display = online ? 'none' : 'flex';
+      if (online) {
+        loadOnlineWorkbook();
+      } else {
+        loadLocalWorkbook();
+      }
+    }
+
+    document.getElementById('sourceOnline').addEventListener('change', updateSourceControls);
+    document.getElementById('sourceLocal').addEventListener('change', updateSourceControls);
+    document.getElementById('reloadOnlineBtn').addEventListener('click', loadOnlineWorkbook);
+    document.getElementById('fileInput').addEventListener('change', loadLocalWorkbook);
+    document.getElementById('commentSourceOnline').addEventListener('change', updateCommentSourceControls);
+    document.getElementById('commentSourceLocal').addEventListener('change', updateCommentSourceControls);
+    document.getElementById('commentJsonInput').addEventListener('change', (e) => { if (document.getElementById('commentSourceLocal').checked) loadCommentJson(e.target.files?.[0]); });
+
+    document.getElementById('rebuildBtn').addEventListener('click', async () => {
+      if (document.getElementById('sourceOnline').checked) {
+        await loadOnlineWorkbook();
+      } else {
+        await loadLocalWorkbook();
+      }
+    });
+
+    document.getElementById('ieNumber').addEventListener('change', () => { if (allLabels.length > 0) { allLabels.forEach(label => { const zpl = buildZPL(label.values); label.zpl = zpl; }); const toRender = filteredLabels.length > 0 ? filteredLabels : allLabels; renderTable(toRender); document.getElementById('status').textContent = 'Updated with IE: ' + (document.getElementById('ieNumber').value || '3') + ' (' + getIEName(document.getElementById('ieNumber').value || '3') + ')'; } });
+    ['refOff','refOn','commentOff','commentOn'].forEach(id => document.getElementById(id).addEventListener('change', () => { if (allLabels.length > 0) { allLabels.forEach(label => { label.zpl = buildZPL(label.values); }); const toRender = filteredLabels.length > 0 ? filteredLabels : allLabels; renderTable(toRender); document.getElementById('status').textContent = 'Label display options updated.'; } }));
+    document.getElementById('downloadAllBtn').addEventListener('click', () => { const toDownload = filteredLabels.length > 0 ? filteredLabels : allLabels; const doublePrint = document.getElementById('doublePrintCheckbox').checked; let zplContent = ''; toDownload.forEach(label => { zplContent += label.zpl; if (doublePrint) { zplContent += label.zpl; } }); downloadText('all_labels.zpl', zplContent); });
+    document.getElementById('copyPSBtn').addEventListener('click', () => { 
+      const toDownload = filteredLabels.length > 0 ? filteredLabels : allLabels;
+      const doublePrint = document.getElementById('doublePrintCheckbox').checked;
+      let zplContent = '';
+      toDownload.forEach(label => {
+        zplContent += label.zpl;
+        if (doublePrint) {
+          zplContent += label.zpl;
+        }
+      });
+      const printerIP = (document.getElementById('printerIP').value || '10.148.103.100').trim(); 
+      const port = 9100;
+      const escapedZpl = zplContent.replace(/"/g, '\\"');
+      const psCmd = '$printerIP = "' + printerIP + '"; $port = ' + port + '; $zpl = "' + escapedZpl + '"; $client = New-Object System.Net.Sockets.TcpClient($printerIP, $port); $stream = $client.GetStream(); $bytes = [System.Text.Encoding]::ASCII.GetBytes($zpl); $stream.Write($bytes, 0, $bytes.Length); $stream.Flush(); $stream.Close(); $client.Close(); Write-Host "Sent to printer."';
+      navigator.clipboard.writeText(psCmd).then(() => { 
+        const btn = document.getElementById('copyPSBtn'); 
+        const originalText = btn.textContent; 
+        btn.textContent = 'Copied to clipboard!'; 
+        setTimeout(() => { 
+          btn.textContent = originalText; 
+        }, 2000);
+        alert('PowerShell command copied to clipboard!\n\nStep 1: Hit Win+X, I on the keyboard.\n\nWhen the black window appears...\nStep 2: Hit Ctrl+V on the keyboard, then hit Enter.\n\nStep 3: Type exit, and hit Enter or click the "X" in the upper right corner of the black screen window.');
+      }).catch(err => { 
+        alert('Failed to copy: ' + err); 
+      }); 
+    });
+    document.getElementById('exportCSVBtn').addEventListener('click', () => { if (allLabels.length > 0) exportLabelsToCSV(allLabels); });
+    document.getElementById('filterBtn').addEventListener('click', () => { if (allLabels.length === 0) { alert('Please load data first'); return; } renderFilterUI(); document.getElementById('filterModal').classList.add('active'); });
+
+    // Embedded is the default source; load it automatically when the page opens.
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Load the authoritative Embedded comment database first, then build labels from C-Dist.
+      await loadOnlineCommentJson();
+      updateSourceControls();
+      updateOnlineCommitNotice();
+    });
+  </script>
+</body>
+</html>
