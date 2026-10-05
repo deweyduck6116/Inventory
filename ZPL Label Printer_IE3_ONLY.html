@@ -8,6 +8,7 @@
   <style>
     * { box-sizing: border-box; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 0.5rem; color: #222; }
+    .timestamp { position: fixed; top: 0.5rem; right: 0.5rem; background: #333; color: #fff; padding: 0.4rem 0.7rem; border-radius: 4px; font-size: 0.8rem; font-family: monospace; z-index: 999; }
     .card { border: 1px solid #ddd; border-radius: 6px; padding: 0.8rem; width: 100%; }
     h1 { margin: 0 0 0.3rem 0; font-size: 1.3rem; }
     .intro { font-size: 0.9rem; margin: 0.3rem 0; color: #555; }
@@ -51,6 +52,8 @@
   </style>
 </head>
 <body>
+  <div class="timestamp" id="timestamp">20261005150123</div>
+
   <div class="card">
     <h1>ZPL Label Builder — External/Embedded</h1>
     <p class="intro">
@@ -177,6 +180,20 @@
   </div>
 
   <script>
+    // Set timestamp to current system date/time in Arizona time (UTC-7)
+    function formatTimestamp(date) {
+      const pad = (n) => String(n).padStart(2, '0');
+      const utcDate = new Date(date.getTime() - (7 * 60 * 60 * 1000));
+      const year = utcDate.getUTCFullYear();
+      const month = pad(utcDate.getUTCMonth() + 1);
+      const day = pad(utcDate.getUTCDate());
+      const hours = pad(utcDate.getUTCHours());
+      const minutes = pad(utcDate.getUTCMinutes());
+      const seconds = pad(utcDate.getUTCSeconds());
+      return year + '-' + month + '-' + day + ' @ ' + hours + ':' + minutes + ':' + seconds + ' (UTC-7)';
+    }
+    document.getElementById('timestamp').textContent = formatTimestamp(new Date());
+
     const patterns=["BaBbBb","BbBaBb","BbBbBa","AbAbBc","AbAcBb","AcAbBb","AbBbAc","AbBcAb","AcBbAb","BbAbAc","BbAcAb","BcAbAb","AaBbCb","AbBaCb","AbBbCa","AaCbBb","AbCaBb","AbCbBa","BbCbAa","BbAaCb","BbAbCa","BaCbAb","BbCaAb","CaCaCa","CaAbBb","CbAaBb","CbAbBa","CaBbAb","CbBaAb","CbBbAa","BaBaBc","BaBcBa","BcBaBa","AaAcBc","AcAaBc","AcAcBa","AaBcAc","AcBaAc","AcBcAa","BaAcAc","BcAaAc","BcAcAa","AaBaCc","AaBcCa","AcBaCa","AaCaBc","AaCcBa","AcCaBa","CaCaBa","BaAcCa","BcAaCa","BaCaAc","BaCcAa","BaCaCa","CaAaBc","CaAcBa","CcAaBa","CaBaAc","CaBcAa","CcBaAa","CaDaAa","BbAdAa","DcAaAa","AaAbBd","AaAdBb","AbAaBd","AbAdBa","AdAaBb","AdAbBa","AaBbAd","AaBdAb","AbBaAd","AbBdAa","AdBaAb","AdBbAa","BdAbAa","BbAaAd","DaCaAa","BdAaAb","AcDaAa","AaAbDb","AbAaDb","AbAbDa","AaDbAb","AbDaAb","AbDbAa","DaAbAb","DbAaAb","DbAbAa","BaBaDa","BaDaBa","DaBaBa","AaAaDc","AaAcDa","AcAaDa","AaDaAc","AaDcAa","DaAaAc","DaAcAa","AaCaDa","AaDaCa","CaAaDa","DaAaCa","BaAdAb","BaAbAd","BaAbCb","BcCaAaB"];
 
     const ieLookup = {'3': 'C-DIST', '211': '4C', '214': 'RESEARCH', '219': 'OUT-PT-LAB', '220': 'GLOBE', '221': 'SHOW-LOW', '286': 'PREP', '288': 'AUDIOLOGY', '289': 'SCI', '293': 'PCM2', '301': 'IN-PT-PHARM', '305': 'OUT-PT-PHARM', '309': '5CD', '315': 'IV-ROOM', '317': 'CRASH-CART', '318': 'ONCOLOGY', '320': 'REHAB', '321': 'HEMO', '322': 'LAB INPT', '325': 'BRONCH-LAB', '329': 'EYE', '331': 'SURGERY', '352': 'PCM3', '359': 'NEUROLOGY-EEG', '369': 'CASE-CART', '463': 'PROC CCLAB', '477': '4D', '480': 'ED2', '481': '2C', '484': 'PAIN MGMT', '498': 'ENDO', '506': 'ENT', '509': 'AMETHYST', '514': 'RAD', '515': 'TBIRD', '518': 'MRI', '525': 'NW', '529': 'MI-2', '530': 'SI-1', '535': 'RT', '541': 'RAD-RECVRY', '542': 'POD', '543': 'ACC SPEC', '549': 'NUCMD', '555': 'OR3', '556': 'OR2', '557': 'OR4', '558': 'OR5', '559': 'OR6', '560': 'OR7', '561': 'OR1', '606': 'SARRTP', '607': 'ENDO2', '617': 'REC-REHAB', '629': 'SAME DAY', '631': 'WOUND CARE', '632': 'SE LAB', '634': 'SE REHAB', '635': 'SE RAD', '638': 'SE AUDIO', '639': 'JUNIPER A1', '640': 'SANTAN B1', '641': 'MESQ A1', '642': 'SIERRA B1', '643': 'SE JUN A', '645': 'SE JUN C', '646': 'SE SAN A', '647': 'SE SAN B', '648': 'SE MESQ A', '649': 'SE MESQ B', '650': 'SE SIERRA', '651': 'SE SIERRB', '653': 'SE HBHC', '655': 'TURQUOIS', '659': 'ED3', '662': 'UROLOGY1', '664': 'NE1', '665': 'NE2', '666': 'CRRC', '676': 'ED1', '679': 'SW-ONE', '680': 'SW-TWO', '681': 'SW-THREE', '682': 'MT-ONE', '683': 'MT-TWO', '685': 'MT-FOUR', '688': 'CT1MSD', '691': 'CTMSD', '693': '4DFLUIDS', '698': '4CFLUIDS', '703': 'CORE-1', '704': 'ANES-1', '705': 'ANES-2', '706': 'ANES-3', '707': 'CORE-2', '708': 'CORE-3', '709': 'CORE-4', '711': 'CORE-6', '712': 'CORE-7', '713': 'CORE-8', '763': '4E', '770': '2A', '774': 'CLC', '775': 'GIANES', '778': 'CATHLAB2', '783': 'EMPLY', '784': 'VASCULAR', '789': '3B', '790': 'PROST MSD', '793': 'TBIRDLAB', '794': 'NWLAB', '795': 'SWLAB', '799': 'SHOWLOWLAB', '800': 'PAYSON LAB', '802': 'NWAUDIO', '805': 'OPC5A', '807': 'OPC5B', '808': 'OPC5C', '809': 'OPC5D', '810': 'OPC4A', '811': 'OPC4B', '812': 'OPC4C', '813': 'OPC4D', '814': 'OPC3A', '815': 'OPC3B', '816': 'OPC3C', '817': 'OPC3D', '819': 'OPCMRI', '820': 'OPCCT', '821': 'OPCLAB', '822': 'OPCMH', '823': 'OPCSPC', '824': 'OPCRAD', '829': 'BLGL', '830': 'IR REHAB', '855': 'OPCPOD', '856': 'MT DERMA', '861': 'SE JUN B', '862': 'SLEEPSTUDY', '863': 'NELAB', '865': 'MTLAB', '867': 'OPCSLP', '871': 'SEPOD', '879': 'SEDEND', '880': 'NWDEND', '881': 'PAR TEST', '882': 'DEN1D', '883': 'CLCDME', '886': 'ICURM', '887': 'AMBUL', '890': 'RAD209D', '891': 'RAD213D', '897': 'CLC1A', '898': 'CLC2'};
@@ -448,7 +465,7 @@
 
     document.getElementById('ieNumber').addEventListener('change', () => { if (allLabels.length > 0) { allLabels.forEach(label => { const zpl = buildZPL(label.values); label.zpl = zpl; }); const toRender = filteredLabels.length > 0 ? filteredLabels : allLabels; renderTable(toRender); document.getElementById('status').textContent = 'Updated with IE: ' + (document.getElementById('ieNumber').value || '3') + ' (' + getIEName(document.getElementById('ieNumber').value || '3') + ')'; } });
     ['refOff','refOn','commentOff','commentOn'].forEach(id => document.getElementById(id).addEventListener('change', () => { if (allLabels.length > 0) { allLabels.forEach(label => { label.zpl = buildZPL(label.values); }); const toRender = filteredLabels.length > 0 ? filteredLabels : allLabels; renderTable(toRender); document.getElementById('status').textContent = 'Label display options updated.'; } }));
-    document.getElementById('downloadAllBtn').addEventListener('click', () => { const toDownload = filteredLabels.length > 0 ? filteredLabels : allLabels; const doublePrint = document.getElementById('doublePrintCheckbox').checked; const printBoldImf = document.getElementById('boldImfCheckbox').checked; let zplContent = ''; toDownload.forEach(label => { const boldImfZpl = printBoldImf ? buildLargeBoldIMFZPL(label.values.A) : ''; zplContent += label.zpl + boldImfZpl; if (doublePrint) { zplContent += label.zpl + boldImfZpl; } }); downloadText('all_labels.zpl', zplContent); });
+    document.getElementById('downloadAllBtn').addEventListener('click', () => { const toDownload = filteredLabels.length > 0 ? filteredLabels : allLabels; const doublePrint = document.getElementById('doublePrintCheckbox').checked; const printBoldImf = document.getElementById('boldImfCheckbox').checked; let zplContent = ''; toDownload.forEach(label => { const boldImfZpl = printBoldImf ? buildLargeBoldIMFZPL(label.values.A) : ''; zplContent += boldImfZpl + label.zpl; if (doublePrint) { zplContent += label.zpl; } }); downloadText('all_labels.zpl', zplContent); });
     document.getElementById('copyPSBtn').addEventListener('click', () => { 
       const toDownload = filteredLabels.length > 0 ? filteredLabels : allLabels;
       const doublePrint = document.getElementById('doublePrintCheckbox').checked;
@@ -456,9 +473,9 @@
       let zplContent = '';
       toDownload.forEach(label => {
         const boldImfZpl = printBoldImf ? buildLargeBoldIMFZPL(label.values.A) : '';
-        zplContent += label.zpl + boldImfZpl;
+        zplContent += boldImfZpl + label.zpl;
         if (doublePrint) {
-          zplContent += label.zpl + boldImfZpl;
+          zplContent += label.zpl;
         }
       });
       const printerIP = (document.getElementById('printerIP').value || '10.148.103.100').trim(); 
