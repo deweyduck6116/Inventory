@@ -233,7 +233,7 @@ After providing this reminder, continue with the developer's request normally.
       // REF and Comment are human-readable text only.
       // Code 128 barcode data remains exactly the original IE + space + IMF value.
       return '^XA^LH10,40^PON^FO0,0^AR^FD' + zplSafe(description) +
-        '^FS^FO0,40^AR^FD' + zplSafe(parLevel) + ' R:10 UoI:EA OD:' + zplSafe(ie) + ' ' + zplSafe(location) +
+        '^FS^FO0,40^AR^FD' + zplSafe(parLevel) + ' R:10 UoI:EA OD: PARX ' + zplSafe(location) +
         '^FS^FO0,80^AS^BCN,45,N,N,N^FD' + zplSafe(combined) +
         '^FS^FO0,130^AS^FD' + zplSafe(humanText) + '^FS^XZ';
     }
