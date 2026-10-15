@@ -9,12 +9,15 @@
     * { box-sizing: border-box; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 0.5rem; color: #222; }
     .timestamp { position: fixed; top: 0.5rem; right: 0.5rem; background: #333; color: #fff; padding: 0.4rem 0.7rem; border-radius: 4px; font-size: 0.8rem; font-family: monospace; z-index: 999; }
+    .header-container { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .gear-icon { cursor: pointer; font-size: 1.3rem; user-select: none; padding: 0.3rem; border-radius: 4px; transition: background 0.2s; }
+    .gear-icon:hover { background: #f0f0f0; }
     .card { border: 1px solid #ddd; border-radius: 6px; padding: 0.8rem; width: 100%; }
     h1 { margin: 0 0 0.3rem 0; font-size: 1.3rem; }
     .intro { font-size: 0.9rem; margin: 0.3rem 0; color: #555; }
     .controls { display: flex; gap: 0.5rem; align-items: center; margin: 0.5rem 0; flex-wrap: wrap; font-size: 0.9rem; }
     label { font-weight: 600; }
-    input[type="text"], input[type="file"] { padding: 0.3rem; font-size: 0.9rem; }
+    input[type="text"], input[type="file"], input[type="password"] { padding: 0.3rem; font-size: 0.9rem; }
     button { padding: 0.4rem 0.7rem; border-radius: 4px; border: 1px solid #333; background: #333; color: #fff; cursor: pointer; font-size: 0.85rem; }
     button.secondary { background: #fff; color: #333; }
     button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -49,13 +52,27 @@
     .filter-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
     .filter-actions button { padding: 0.5rem 1rem; }
     .filter-info { font-size: 0.85rem; color: #666; margin-top: 0.5rem; }
+    .settings-form-group { margin: 1rem 0; padding: 1rem; border: 1px solid #eee; border-radius: 4px; }
+    .settings-form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+    .settings-form-group input[type="checkbox"] { margin-right: 0.3rem; }
+    .settings-form-group input[type="password"] { width: 100%; padding: 0.4rem; margin-bottom: 0.5rem; }
+    .settings-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .settings-tabs button { padding: 0.5rem 1rem; border: 1px solid #ccc; background: #f5f5f5; cursor: pointer; border-radius: 4px 4px 0 0; }
+    .settings-tabs button.active { background: #333; color: #fff; border-color: #333; }
+    .settings-tab-content { display: none; }
+    .settings-tab-content.active { display: block; }
+    .error-message { color: #d32f2f; margin: 0.5rem 0; font-size: 0.9rem; }
+    .success-message { color: #388e3c; margin: 0.5rem 0; font-size: 0.9rem; }
   </style>
 </head>
 <body>
   <div class="timestamp" id="timestamp">20261005150123</div>
 
   <div class="card">
-    <h1>ZPL Label Builder — External/Embedded</h1>
+    <div class="header-container">
+      <span class="gear-icon" id="settingsGear" title="Settings">⚙️</span>
+      <h1>ZPL Label Builder — External/Embedded</h1>
+    </div>
     <p class="intro">
       Please select <strong>Book1-C-DIST.xlsx</strong> using the file picker.
       This builds one ZPL label per row.
@@ -179,7 +196,193 @@
     </div>
   </div>
 
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="modal-close" onclick="closeSettingsModal()">&times;</span>
+        Settings
+      </div>
+      <div id="settingsLoginForm">
+        <div class="settings-form-group">
+          <label for="settingsPassword">Enter Password:</label>
+          <input type="password" id="settingsPassword" placeholder="Password" />
+          <button onclick="loginToSettings()" style="margin-top: 0.5rem;">Login</button>
+          <div id="loginErrorMsg" class="error-message"></div>
+        </div>
+      </div>
+      <div id="settingsPanelForm" style="display: none;">
+        <div class="settings-tabs">
+          <button class="settings-tab-btn active" onclick="switchSettingsTab('defaults')">Default Settings</button>
+          <button class="settings-tab-btn" onclick="switchSettingsTab('password')">Change Password</button>
+        </div>
+        <div id="settingsDefaultsTab" class="settings-tab-content active">
+          <div class="settings-form-group">
+            <label for="defaultDoublePrint">
+              <input type="checkbox" id="defaultDoublePrint" />
+              Print All Labels 2x (Default)
+            </label>
+          </div>
+          <div class="settings-form-group">
+            <label for="defaultBoldImf">
+              <input type="checkbox" id="defaultBoldImf" />
+              Print Large Bold IMF Label (Default)
+            </label>
+          </div>
+          <button onclick="saveDefaultSettings()">Save Defaults</button>
+          <button onclick="logoutFromSettings()" class="secondary" style="margin-left: 0.5rem;">Logout</button>
+          <div id="defaultsSaveMsg"></div>
+        </div>
+        <div id="settingsPasswordTab" class="settings-tab-content">
+          <div class="settings-form-group">
+            <label for="currentPassword">Current Password:</label>
+            <input type="password" id="currentPassword" placeholder="Current password" />
+          </div>
+          <div class="settings-form-group">
+            <label for="newPassword">New Password:</label>
+            <input type="password" id="newPassword" placeholder="New password" />
+          </div>
+          <div class="settings-form-group">
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" id="confirmPassword" placeholder="Confirm new password" />
+          </div>
+          <button onclick="changePassword()">Change Password</button>
+          <button onclick="logoutFromSettings()" class="secondary" style="margin-left: 0.5rem;">Logout</button>
+          <div id="passwordChangeMsg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // Settings Management
+    const STORAGE_KEY_SETTINGS = 'zpl_settings';
+    const STORAGE_KEY_PASSWORD = 'zpl_admin_password';
+    
+    function getSettings() {
+      const stored = window.localStorage?.getItem(STORAGE_KEY_SETTINGS);
+      return stored ? JSON.parse(stored) : { doublePrint: true, boldImf: true };
+    }
+    
+    function saveSettings(settings) {
+      window.localStorage?.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+    }
+    
+    function getAdminPassword() {
+      return window.localStorage?.getItem(STORAGE_KEY_PASSWORD) || '123456';
+    }
+    
+    function setAdminPassword(newPassword) {
+      window.localStorage?.setItem(STORAGE_KEY_PASSWORD, newPassword);
+    }
+    
+    function initializeDefaultCheckboxes() {
+      const settings = getSettings();
+      document.getElementById('doublePrintCheckbox').checked = settings.doublePrint;
+      document.getElementById('boldImfCheckbox').checked = settings.boldImf;
+      document.getElementById('defaultDoublePrint').checked = settings.doublePrint;
+      document.getElementById('defaultBoldImf').checked = settings.boldImf;
+    }
+    
+    function openSettingsModal() {
+      document.getElementById('settingsModal').classList.add('active');
+      document.getElementById('settingsPassword').value = '';
+      document.getElementById('loginErrorMsg').textContent = '';
+      document.getElementById('settingsLoginForm').style.display = 'block';
+      document.getElementById('settingsPanelForm').style.display = 'none';
+    }
+    
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('active');
+      document.getElementById('settingsPassword').value = '';
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      document.getElementById('loginErrorMsg').textContent = '';
+      document.getElementById('defaultsSaveMsg').textContent = '';
+      document.getElementById('passwordChangeMsg').textContent = '';
+    }
+    
+    function loginToSettings() {
+      const password = document.getElementById('settingsPassword').value;
+      const correctPassword = getAdminPassword();
+      if (password === correctPassword) {
+        document.getElementById('settingsLoginForm').style.display = 'none';
+        document.getElementById('settingsPanelForm').style.display = 'block';
+        initializeDefaultCheckboxes();
+        document.getElementById('loginErrorMsg').textContent = '';
+      } else {
+        document.getElementById('loginErrorMsg').textContent = 'Incorrect password.';
+        document.getElementById('settingsPassword').value = '';
+      }
+    }
+    
+    function logoutFromSettings() {
+      document.getElementById('settingsLoginForm').style.display = 'block';
+      document.getElementById('settingsPanelForm').style.display = 'none';
+      document.getElementById('settingsPassword').value = '';
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      document.getElementById('loginErrorMsg').textContent = '';
+      document.getElementById('defaultsSaveMsg').textContent = '';
+      document.getElementById('passwordChangeMsg').textContent = '';
+    }
+    
+    function saveDefaultSettings() {
+      const settings = {
+        doublePrint: document.getElementById('defaultDoublePrint').checked,
+        boldImf: document.getElementById('defaultBoldImf').checked
+      };
+      saveSettings(settings);
+      document.getElementById('doublePrintCheckbox').checked = settings.doublePrint;
+      document.getElementById('boldImfCheckbox').checked = settings.boldImf;
+      const msg = document.getElementById('defaultsSaveMsg');
+      msg.innerHTML = '<span class="success-message">Defaults saved successfully!</span>';
+      setTimeout(() => { msg.innerHTML = ''; }, 3000);
+    }
+    
+    function changePassword() {
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const msg = document.getElementById('passwordChangeMsg');
+      
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        msg.innerHTML = '<span class="error-message">All fields are required.</span>';
+        return;
+      }
+      
+      const correctPassword = getAdminPassword();
+      if (currentPassword !== correctPassword) {
+        msg.innerHTML = '<span class="error-message">Current password is incorrect.</span>';
+        return;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        msg.innerHTML = '<span class="error-message">New passwords do not match.</span>';
+        return;
+      }
+      
+      if (newPassword.length < 6) {
+        msg.innerHTML = '<span class="error-message">New password must be at least 6 characters.</span>';
+        return;
+      }
+      
+      setAdminPassword(newPassword);
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      msg.innerHTML = '<span class="success-message">Password changed successfully!</span>';
+      setTimeout(() => { msg.innerHTML = ''; }, 3000);
+    }
+    
+    function switchSettingsTab(tab) {
+      document.querySelectorAll('.settings-tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.settings-tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('settings' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Tab').classList.add('active');
+      event.target.classList.add('active');
+    }
+
     // Set timestamp to current system date/time in Arizona time (UTC-7)
     function formatTimestamp(date) {
       const pad = (n) => String(n).padStart(2, '0');
@@ -363,8 +566,6 @@
         const M = getCellValue(sheet, XLSX.utils.encode_cell({ r, c: 12 }));
         const O = getCellValue(sheet, XLSX.utils.encode_cell({ r, c: 14 }));
         const R = getCellValue(sheet, XLSX.utils.encode_cell({ r, c: 17 }));
-        // IMPORTANT: Book1-C-DIST.xlsx is a read-only source. Comments MUST NOT be read from Column V.
-        // C-Dist_Comments.json, keyed by IMF (Column A), is the sole Comment source.
         const comment = getJsonComment(A);
         const corePresent = [B].some(v => (v ?? '').toString().trim() !== '');
         if (!corePresent) continue;
@@ -497,9 +698,12 @@
     document.getElementById('exportCSVBtn').addEventListener('click', () => { if (allLabels.length > 0) exportLabelsToCSV(allLabels); });
     document.getElementById('filterBtn').addEventListener('click', () => { if (allLabels.length === 0) { alert('Please load data first'); return; } renderFilterUI(); document.getElementById('filterModal').classList.add('active'); });
 
+    // Settings gear icon listener
+    document.getElementById('settingsGear').addEventListener('click', openSettingsModal);
+
     // Embedded is the default source; load it automatically when the page opens.
     window.addEventListener('DOMContentLoaded', async () => {
-      // Load the authoritative Embedded comment database first, then build labels from C-Dist.
+      initializeDefaultCheckboxes();
       await loadOnlineCommentJson();
       updateSourceControls();
       updateOnlineCommitNotice();
