@@ -64,7 +64,7 @@
   </style>
 </head>
 <body>
-  <div class="timestamp" id="timestamp">2026-10-15 @ 13:23:30 (UTC-7)</div>
+  <div class="timestamp" id="timestamp">2026-10-15 @ 13:27:19 (UTC-7)</div>
 
   <div class="card">
     <div class="header-container">
@@ -229,7 +229,7 @@
           <button onclick="saveDefaultSettings()">Save Defaults</button>
           <button onclick="downloadHTMLWithSettings()" style="margin-left: 0.5rem;">Download Custom HTML</button>
           <button onclick="logoutFromSettings()" class="secondary" style="margin-left: 0.5rem;">Logout</button>
-          <div id="defaultsSaveMsg"></div>
+          <div id="defaultsSaveMsg"><span class="success-message">Defaults saved successfully!</span></div>
         </div>
         <div id="settingsPasswordTab" class="settings-tab-content">
           <div class="settings-form-group">
@@ -755,6 +755,11 @@
       await loadOnlineCommentJson();
       updateSourceControls();
       updateOnlineCommitNotice();
+    });
+    
+    // Prevent settings modal from opening on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('settingsModal').classList.remove('active');
     });
   </script>
 
