@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<html lang="en" style="--im-a: #FFCC99; --im-b: #FFFACD; --im-c: #B8E6B8; --im-heading: #f2f2f2; --im-plain: #ffffff; --im-border: #2e16e3;"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IM Assignments</title>
 <style>
   body {
@@ -35,9 +34,48 @@
   .category-c {
     background-color: #B8E6B8;
   }
+
+  :root { --im-a:#FFCC99; --im-b:#FFFACD; --im-c:#B8E6B8; --im-heading:#f2f2f2; --im-plain:#ffffff; --im-border:#2e16e3; }
+  .category-a { background-color:var(--im-a); }
+  .category-b { background-color:var(--im-b); }
+  .category-c { background-color:var(--im-c); }
+  th { background-color:var(--im-heading); }
+  tbody tr:not(.category-a):not(.category-b):not(.category-c) { background-color:var(--im-plain); }
+  th, td { border-color:var(--im-border); }
+  #imGear { position:absolute;right:12px;top:8px;cursor:pointer;font-size:22px;background:white;border:1px solid #777;border-radius:6px;padding:3px 9px; }
+  #imModal { display:none;position:fixed;inset:0;background:#0008;z-index:1000;align-items:center;justify-content:center; }
+  #imPanel { background:white;border-radius:9px;padding:22px;max-width:440px;width:calc(100% - 50px);max-height:85vh;overflow:auto;box-shadow:0 8px 35px #0005;font-family:Arial,sans-serif; }
+  #imPanel h2 { margin-top:0; } #imPanel label { display:flex;justify-content:space-between;align-items:center;margin:10px 0;gap:12px; }
+  #imPanel input[type=color] { width:95px;height:34px; } #imPanel button { padding:7px 12px;margin:5px 5px 5px 0;cursor:pointer; }
+  #imPanel .imHex { font-family:monospace; } #imStatus {font-size:13px;min-height:18px;}
+  [data-im-editable="true"] { outline:2px dashed #2473b8;outline-offset:-2px;cursor:text; }
+  .imBottomBtns { display:flex; justify-content:center; gap:10px; margin:0 0 10px; }
+  #imAddRow, #imSortCat { padding:7px 14px; cursor:pointer; }
+  #imAddRow[hidden], #imSortCat[hidden] { display:none; }
+  #imRowMenu { position:fixed; z-index:1100; background:white; border:1px solid #777; border-radius:6px; box-shadow:0 4px 14px #0004; padding:4px 0; min-width:180px; font-family:Arial,sans-serif; font-size:14px; }
+  #imRowMenu[hidden] { display:none; }
+  #imRowMenu button { display:block; width:100%; text-align:left; background:none; border:0; padding:8px 14px; cursor:pointer; font:inherit; }
+  #imRowMenu button:hover { background:#e8eefc; }
+  #imRowMenu .imMenuLabel { padding:6px 14px 2px; font-size:12px; color:#555; font-weight:bold; border-top:1px solid #ddd; margin-top:4px; }
 </style>
 </head>
 <body>
+
+<button id="imGear" type="button" title="Settings" aria-label="Settings">⚙</button>
+<div id="imModal" role="dialog" aria-modal="true" aria-label="Assignment settings" style="display: none;">
+  <div id="imPanel">
+    <button id="imClose" type="button" style="float:right">Close</button>
+    <h2>Settings</h2>
+    <div id="imLogin"><label for="imPassword">Password <input id="imPassword" type="password" autocomplete="off"></label><button id="imUnlock" type="button">Unlock</button><p id="imLoginStatus" role="status"></p></div>
+    <div id="imControls" hidden="">
+      <p>Unlock editing to change the title, column headings, assignments, and footer directly on the page. Use "Add row" below the table to add assignments.</p>
+      <button id="imEdit" type="button">Enable editing</button><button id="imSave" type="button">Save changes and lock</button><button id="imDownload" type="button">Download updated HTML</button>
+      <h3>Page colors</h3><div id="imColors"><label><span>Category A</span><input type="color" data-color="--im-a"><span class="imHex">#FFCC99</span></label><label><span>Category B</span><input type="color" data-color="--im-b"><span class="imHex">#FFFACD</span></label><label><span>Category C</span><input type="color" data-color="--im-c"><span class="imHex">#B8E6B8</span></label><label><span>Column headers</span><input type="color" data-color="--im-heading"><span class="imHex">#F2F2F2</span></label><label><span>Uncolored rows</span><input type="color" data-color="--im-plain"><span class="imHex">#FFFFFF</span></label><label><span>Table borders</span><input type="color" data-color="--im-border"><span class="imHex">#2E16E3</span></label><label><span>Category A</span><input type="color" data-color="--im-a"><span class="imHex">#FFCC99</span></label><label><span>Category B</span><input type="color" data-color="--im-b"><span class="imHex">#FFFACD</span></label><label><span>Category C</span><input type="color" data-color="--im-c"><span class="imHex">#B8E6B8</span></label><label><span>Column headers</span><input type="color" data-color="--im-heading"><span class="imHex">#F2F2F2</span></label><label><span>Uncolored rows</span><input type="color" data-color="--im-plain"><span class="imHex">#FFFFFF</span></label><label><span>Table borders</span><input type="color" data-color="--im-border"><span class="imHex">#2E16E3</span></label></div>
+      <p id="imStatus" role="status"></p>
+      <button id="imReset" type="button">Restore original text and colors</button>
+    </div>
+  </div>
+</div>
 
 <div class="header">IM ASSIGNMENTS</div>
 
@@ -49,39 +87,273 @@
       <th>BACKUP IM</th>
     </tr>
   </thead>
-  <tbody>
-    <tr class="category-a"><td>Will</td><td>A1MS</td><td>Jack</td></tr>
-    <tr class="category-a"><td>Andrea</td><td>A10M</td><td>Jemmel / Jack</td></tr>
-    <tr class="category-a"><td>Will</td><td>AINT</td><td>Jack</td></tr>
-    <tr class="category-a"><td>Rassi</td><td>AMSP</td><td>Will</td></tr>
-    <tr class="category-a"><td>Rassi</td><td>AOM</td><td>Will</td></tr>
-    <tr class="category-b"><td>Andrea</td><td>B1MS</td><td>Jemmel / Jack</td></tr>
-    <tr class="category-b"><td>Andrea</td><td>B10M</td><td>Jemmel / Jack</td></tr>
-    <tr class="category-b"><td>Will</td><td>BINT</td><td>Jack</td></tr>
-    <tr class="category-b"><td>Will</td><td>BMSP</td><td>Jack</td></tr>
-    <tr class="category-b"><td>Rassi</td><td>BOM</td><td>Will</td></tr>
-    <tr class="category-c"><td>Will</td><td>C1MS</td><td>Jack</td></tr>
-    <tr class="category-c"><td>Will</td><td>CINT</td><td>Jack</td></tr>
-    <tr class="category-c"><td>MISTY</td><td>CMSP</td><td>Ty / Jack</td></tr>
-    <tr class="category-c"><td>Penny</td><td>COM1</td><td>Andrea</td></tr>
-    <tr class="category-c"><td>Cayden</td><td>COM2</td><td>Penny</td></tr>
-    <tr><td>Michael</td><td>CONTINGENCY</td><td>Jemmel / Jack</td></tr>
-    <tr><td>Tyrone</td><td>DENTAL</td><td>Penny</td></tr>
-    <tr><td>Michael</td><td>DENTAL INST</td><td>Jemmel / Jack</td></tr>
-    <tr><td>MISTY</td><td>EMS</td><td>Michael</td></tr>
-    <tr><td>Tyrone</td><td>ENG</td><td>Penny</td></tr>
-    <tr><td>Jemmel</td><td>IMG</td><td>Andrea</td></tr>
-    <tr><td>Jack</td><td>IMPLANTS</td><td>OR TEAM</td></tr>
-    <tr><td>Michael</td><td>INTUITIVE</td><td>Jemmel / Jack</td></tr>
-    <tr><td>MariCruz</td><td>LEAF REQ</td><td>Michael</td></tr>
-    <tr><td>MariCruz</td><td>MJL (Office)</td><td>Michael</td></tr>
-    <tr><td>Brian</td><td>PROSTHETICS</td><td>N\A</td></tr>
-    <tr><td>MariCruz</td><td>RECALLS</td><td>Michael</td></tr>
-    <tr><td>Michael</td><td>SPS-INSTR</td><td>Jemmel / Jack</td></tr>
-  </tbody>
+  <tbody><tr class="category-a"><td>Toby</td><td>A1MS</td><td>Jack</td></tr><tr class="category-a"><td>Penny</td><td>A1OM</td><td>Jemmel / Jack</td></tr><tr class="category-a"><td>Toby</td><td>AINT</td><td>Jack</td></tr><tr class="category-a"><td>Rassi</td><td>AMSP</td><td>Will</td></tr><tr class="category-a"><td>Rassi</td><td>AOM</td><td>Will</td></tr><tr class="category-b"><td>Penny</td><td>B1MS</td><td>Jemmel / Jack</td></tr><tr class="category-b"><td>Penny</td><td>B1OM</td><td>Jemmel / Jack</td></tr><tr class="category-b"><td>Toby</td><td>BINT</td><td>Jack</td></tr><tr class="category-b"><td>Jack</td><td>BMSP</td><td>Will</td></tr><tr class="category-b"><td>Rassi</td><td>BOM</td><td>Will</td></tr><tr class="category-c"><td>Toby</td><td>C1MS</td><td>Jack</td></tr><tr class="category-c"><td>Jack</td><td>C10M</td><td>Will</td></tr><tr class="category-c"><td>Will</td><td>CATH Lab</td><td>Penny</td></tr><tr><td>CASE CART</td><td>CCAS</td><td>N\A</td></tr><tr class="category-c"><td>Toby</td><td>CINT</td><td>Jack</td></tr><tr class="category-c"><td>Misty</td><td>CMS1</td><td>Penny</td></tr><tr class="category-c"><td>Will</td><td>CMS2</td><td>Penny</td></tr><tr class="category-c"><td>Misty</td><td>CMSP</td><td>Ty / Jack</td></tr><tr class="category-c"><td>MariCruz</td><td>COM 1</td><td>OR TEAM</td></tr><tr class="category-c"><td>Penny</td><td>COM1</td><td>Andrea</td></tr><tr class="category-c"><td>Cayden</td><td>COM2</td><td>Penny</td></tr><tr><td>Michael</td><td>CONTINGENCY</td><td>Jemmel / Jack</td></tr><tr class="category-c"><td>MariCruz</td><td>CRRT</td><td>Penny</td></tr><tr><td>Tyrone</td><td>DENTAL</td><td>Penny</td></tr><tr><td>Michael</td><td>DENTAL INST</td><td>Jemmel / Jack</td></tr><tr><td>Will</td><td>EMS</td><td>Michael</td></tr><tr><td>Will</td><td>ENG</td><td>Penny</td></tr><tr><td>Jemmel</td><td>IMG</td><td>Andrea</td></tr><tr><td>Jack</td><td>IMPLANTS</td><td>OR TEAM</td></tr><tr><td>Michael</td><td>INTUITIVE</td><td>Jemmel / Jack</td></tr><tr><td>MariCruz</td><td>LEAF REQ</td><td>Michael</td></tr><tr><td>MariCruz</td><td>MJL (Office)</td><td>Michael</td></tr><tr><td>Brian</td><td>PROSTHETICS</td><td>N\A</td></tr><tr><td>MariCruz</td><td>RECALLS</td><td>Michael</td></tr><tr><td>Michael</td><td>SPS-INSTR</td><td>Jemmel / Jack</td></tr></tbody>
 </table>
+
+<div class="imBottomBtns"><button id="imSortCat" type="button" hidden="">Sort A to Z by Category</button><button id="imAddRow" type="button" hidden="">+ Add row</button></div>
+
+<div id="imRowMenu" role="menu" hidden="" style="left: 983px; top: 640px;">
+  <button id="imInsertAbove" type="button" role="menuitem">Insert blank row above</button>
+  <div class="imMenuLabel">Row color</div>
+  <button type="button" role="menuitem" data-row-class="category-a">Category A color</button>
+  <button type="button" role="menuitem" data-row-class="category-b">Category B color</button>
+  <button type="button" role="menuitem" data-row-class="category-c">Category C color</button>
+  <button type="button" role="menuitem" data-row-class="">No color</button>
+  <div class="imMenuLabel">Row</div>
+  <button id="imDeleteRow" type="button" role="menuitem">Delete row</button>
+</div>
 
 <div class="footer">BACKUP IM IS AVAILABLE WHEN PRIMARY IM IS ON LEAVE</div>
 
-</body>
-</html>
+<script>
+(function () {
+  'use strict';
+  const storageKey = "KCS_IM_Assignments_export_1792701494405";
+  const defaults = {"--im-a":"#FFCC99","--im-b":"#FFFACD","--im-c":"#B8E6B8","--im-heading":"#f2f2f2","--im-plain":"#ffffff","--im-border":"#2e16e3"};
+  const names = {'--im-a':'Category A','--im-b':'Category B','--im-c':'Category C','--im-heading':'Column headers','--im-plain':'Uncolored rows','--im-border':'Table borders'};
+  const COLS = 3;
+  const $ = id => document.getElementById(id);
+  const headerEl = document.querySelector('.header');
+  const footerEl = document.querySelector('.footer');
+  const headCells = [...document.querySelectorAll('thead th')];
+  const tbody = document.querySelector('tbody');
+  const addBtn = $('imAddRow');
+  let authenticated = false, editing = false;
+
+  // Every editable piece of text on the page, including rows added later.
+  function getFields() { return [headerEl, ...headCells, ...tbody.querySelectorAll('td'), footerEl]; }
+
+  // Current page content as a flat list of text values plus the category class of each row.
+  function snapshot() {
+    return {
+      text: getFields().map(el => el.textContent),
+      rowClasses: [...tbody.rows].map(tr => tr.className)
+    };
+  }
+  const originalData = snapshot();
+
+  function load() { try { return JSON.parse(localStorage.getItem(storageKey)) || {}; } catch (_) { return {}; } }
+
+  function renderRow(cls, cells) {
+    const tr = document.createElement('tr');
+    if (cls) tr.className = cls;
+    cells.forEach(text => { const td = document.createElement('td'); td.textContent = text; tr.appendChild(td); });
+    return tr;
+  }
+
+  function applyData(data) {
+    const t = data && Array.isArray(data.text) ? data.text : null;
+    const usable = t && t.length >= 2 + COLS && (t.length - (2 + COLS)) % COLS === 0;
+    const src = usable ? data : originalData;
+    const st = src.text;
+    const rowCount = (st.length - (2 + COLS)) / COLS;
+    headerEl.textContent = st[0];
+    headCells.forEach((th, i) => th.textContent = st[1 + i]);
+    tbody.replaceChildren(...Array.from({ length: rowCount }, (_, i) =>
+      renderRow((src.rowClasses && src.rowClasses[i]) || '', st.slice(1 + COLS + i * COLS, 1 + COLS + (i + 1) * COLS))));
+    footerEl.textContent = st[st.length - 1];
+
+    Object.keys(defaults).forEach(k => document.documentElement.style.setProperty(k, /^#[0-9a-f]{6}$/i.test(data?.colors?.[k] || '') ? data.colors[k] : defaults[k]));
+    document.querySelectorAll('#imColors input[type=color]').forEach(input => { input.value = getComputedStyle(document.documentElement).getPropertyValue(input.dataset.color).trim(); input.nextElementSibling.textContent = input.value.toUpperCase(); });
+  }
+
+  function setEditing(enabled) {
+    editing = enabled;
+    getFields().forEach(el => { el.contentEditable = String(enabled); if (enabled) el.dataset.imEditable = 'true'; else delete el.dataset.imEditable; });
+    addBtn.hidden = !enabled;
+    $('imSortCat').hidden = !enabled;
+    $('imEdit').textContent = enabled ? 'Editing enabled' : 'Enable editing';
+    $('imEdit').disabled = enabled;
+    $('imStatus').textContent = enabled ? 'Edit fields directly on the page, add rows if needed, then save and lock.' : 'Fields locked.';
+  }
+
+  function save() {
+    const colors = {};
+    Object.keys(defaults).forEach(k => colors[k] = getComputedStyle(document.documentElement).getPropertyValue(k).trim());
+    try { localStorage.setItem(storageKey, JSON.stringify({ ...snapshot(), colors })); $('imStatus').textContent = 'Saved in this browser. Fields locked.'; }
+    catch (_) { $('imStatus').textContent = 'Unable to save: browser storage is unavailable.'; }
+    setEditing(false);
+  }
+
+  Object.keys(defaults).forEach(k => {
+    const label = document.createElement('label');
+    const title = document.createElement('span'); title.textContent = names[k];
+    const input = document.createElement('input'); input.type = 'color'; input.dataset.color = k; input.value = defaults[k];
+    const hex = document.createElement('span'); hex.className = 'imHex'; hex.textContent = defaults[k];
+    input.addEventListener('input', () => { document.documentElement.style.setProperty(k, input.value); hex.textContent = input.value.toUpperCase(); });
+    label.append(title, input, hex); $('imColors').appendChild(label);
+  });
+
+  applyData(load());
+  setEditing(false);
+
+  // Sort rows A to Z by the Category column (column 2). Blank categories go last.
+  $('imSortCat').addEventListener('click', () => {
+    if (!editing) return;
+    const rows = [...tbody.rows];
+    rows.sort((a, b) => {
+      const x = a.cells[1].textContent.trim(), y = b.cells[1].textContent.trim();
+      if (!x && y) return 1;
+      if (x && !y) return -1;
+      return x.localeCompare(y, undefined, { sensitivity: 'base', numeric: true });
+    });
+    tbody.replaceChildren(...rows);
+    $('imStatus').textContent = 'Sorted A to Z by Category. Save changes to keep the new order.';
+  });
+
+  addBtn.addEventListener('click', () => {
+    if (!editing) return;
+    const tr = renderRow('', Array(COLS).fill(''));
+    tbody.appendChild(tr);
+    tr.querySelectorAll('td').forEach(td => { td.contentEditable = 'true'; td.dataset.imEditable = 'true'; });
+    tr.cells[0].focus();
+    tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  // Right-click any row (while editing) to insert a blank row above it.
+  const rowMenu = $('imRowMenu');
+  let menuRow = null;
+  function hideRowMenu() { rowMenu.hidden = true; menuRow = null; }
+  tbody.addEventListener('contextmenu', e => {
+    if (!editing) return;
+    const tr = e.target.closest('tr');
+    if (!tr) return;
+    e.preventDefault();
+    menuRow = tr;
+    rowMenu.hidden = false;
+    const x = Math.min(e.clientX, window.innerWidth - rowMenu.offsetWidth - 4);
+    const y = Math.min(e.clientY, window.innerHeight - rowMenu.offsetHeight - 4);
+    rowMenu.style.left = Math.max(0, x) + 'px';
+    rowMenu.style.top = Math.max(0, y) + 'px';
+  });
+  $('imInsertAbove').addEventListener('click', () => {
+    if (!editing || !menuRow) return;
+    const tr = renderRow('', Array(COLS).fill(''));
+    tr.querySelectorAll('td').forEach(td => { td.contentEditable = 'true'; td.dataset.imEditable = 'true'; });
+    menuRow.before(tr);
+    hideRowMenu();
+    tr.cells[0].focus();
+  });
+  // Row color options: the row takes the matching category class, so colors follow the Settings palette.
+  rowMenu.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-row-class]');
+    if (!editing || !btn || !menuRow) return;
+    menuRow.className = btn.dataset.rowClass;
+    hideRowMenu();
+  });
+  $('imDeleteRow').addEventListener('click', () => {
+    if (!editing || !menuRow) return;
+    const tr = menuRow;
+    hideRowMenu();
+    if (confirm('Delete this row?')) tr.remove();
+  });
+
+  // Cursor-key navigation between table cells while editing.
+  // Left/Right move to the neighboring cell only when the caret is already at the edge of the text,
+  // so normal typing and text selection are not interrupted. Up/Down move to the same column in the next/previous row.
+  function placeCaret(el, atEnd) {
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    r.collapse(!atEnd);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+  }
+  tbody.addEventListener('keydown', e => {
+    if (!editing) return;
+    const moves = { ArrowLeft: [0, -1], ArrowRight: [0, 1], ArrowUp: [-1, 0], ArrowDown: [1, 0] };
+    const d = moves[e.key];
+    if (!d || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    const cell = e.target.closest('td');
+    if (!cell) return;
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !sel.isCollapsed) return;
+    const rows = [...tbody.rows];
+    const ri = rows.indexOf(cell.parentElement), ci = cell.cellIndex;
+    if (d[0] !== 0) {
+      const nr = ri + d[0];
+      if (nr < 0 || nr >= rows.length) return;
+      e.preventDefault();
+      const target = rows[nr].cells[ci];
+      target.focus();
+      placeCaret(target, false);
+      return;
+    }
+    const r = sel.getRangeAt(0);
+    const before = document.createRange();
+    before.selectNodeContents(cell);
+    before.setEnd(r.endContainer, r.endOffset);
+    const after = document.createRange();
+    after.selectNodeContents(cell);
+    after.setStart(r.endContainer, r.endOffset);
+    const atStart = before.toString().length === 0, atEnd = after.toString().length === 0;
+    if ((d[1] < 0 && !atStart) || (d[1] > 0 && !atEnd)) return;
+    e.preventDefault();
+    const flat = ri * COLS + ci + d[1];
+    if (flat < 0 || flat >= rows.length * COLS) return;
+    const target = rows[Math.floor(flat / COLS)].cells[flat % COLS];
+    target.focus();
+    placeCaret(target, d[1] < 0);
+  });
+  document.addEventListener('mousedown', e => { if (!rowMenu.contains(e.target)) hideRowMenu(); });
+  window.addEventListener('scroll', hideRowMenu, true);
+  window.addEventListener('resize', hideRowMenu);
+
+  // Keep each cell to one line so rows stay consistent.
+  document.querySelector('table').addEventListener('keydown', e => {
+    if (editing && e.key === 'Enter') e.preventDefault();
+  });
+
+  $('imGear').addEventListener('click', () => { $('imModal').style.display = 'flex'; $('imLogin').hidden = authenticated; $('imControls').hidden = !authenticated; if (!authenticated) $('imPassword').focus(); });
+  $('imClose').addEventListener('click', () => { $('imModal').style.display = 'none'; });
+  $('imUnlock').addEventListener('click', () => {
+    if ($('imPassword').value !== '123456') { $('imLoginStatus').textContent = 'Incorrect password.'; return; }
+    authenticated = true; $('imPassword').value = ''; $('imLoginStatus').textContent = ''; $('imLogin').hidden = true; $('imControls').hidden = false;
+  });
+  $('imPassword').addEventListener('keydown', e => { if (e.key === 'Enter') $('imUnlock').click(); });
+  $('imEdit').addEventListener('click', () => { setEditing(true); $('imModal').style.display = 'none'; });
+  $('imSave').addEventListener('click', save);
+
+  // SURGICAL PROTECTION: Export is available only inside authenticated Settings.
+  // Keep the original page, assignment order, editing lock and color controls intact.
+  function downloadUpdatedHTML() {
+    setEditing(false);
+    const copy = document.documentElement.cloneNode(true);
+    // The clone already contains the current text and rows; just strip editing state.
+    copy.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+    copy.querySelectorAll('[data-im-editable]').forEach(el => el.removeAttribute('data-im-editable'));
+    copy.querySelector('#imAddRow').hidden = true;
+    const colors = {};
+    Object.keys(defaults).forEach(k => colors[k] = getComputedStyle(document.documentElement).getPropertyValue(k).trim());
+    const style = copy.querySelector('style');
+    style.textContent = style.textContent.replace(/:root\s*\{[^}]*\}/, ':root { ' + Object.entries(colors).map(([k, v]) => k + ':' + v + ';').join(' ') + ' }');
+    const script = copy.querySelector('script');
+    const newKey = 'KCS_IM_Assignments_export_' + Date.now();
+    script.textContent = script.textContent
+      .replace(/const storageKey = "[^"]*";/, 'const storageKey = ' + JSON.stringify(newKey) + ';')
+      .replace(/const defaults = \{[^;]*\};/, 'const defaults = ' + JSON.stringify(colors) + ';');
+    copy.querySelector('#imModal').style.display = 'none';
+    copy.querySelector('#imLogin').hidden = false;
+    copy.querySelector('#imControls').hidden = true;
+    copy.querySelector('#imPassword').value = '';
+    copy.querySelector('#imStatus').textContent = '';
+    copy.querySelector('#imLoginStatus').textContent = '';
+    const html = '<!DOCTYPE html>\n' + copy.outerHTML;
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'IM_Assignments_updated.html';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    $('imStatus').textContent = 'Updated HTML download requested. Fields locked.';
+  }
+  $('imDownload').addEventListener('click', downloadUpdatedHTML);
+
+  $('imReset').addEventListener('click', () => { if (!confirm('Restore all original assignments and colors?')) return; applyData({}); save(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { hideRowMenu(); if ($('imModal').style.display === 'flex') $('imModal').style.display = 'none'; } });
+})();
+</script>
+
+</body></html>
